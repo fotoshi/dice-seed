@@ -1,0 +1,2849 @@
+<!DOCTYPE html>
+<html lang="es" data-lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dice-seed · BIP-39 con dados</title>
+<meta name="description" content="Aprende cómo se construye una semilla BIP-39 de 12 palabras a partir de 50 tiradas de dado, y usa scripts firmados y auditables para hacerlo tú mismo.">
+<style>
+:root{
+  --felt-900:#0B1F19; --felt-800:#10281F; --felt-700:#17342A;
+  --felt-600:#204236; --felt-500:#2C5748;
+  --bone:#E9E3D5; --bone-dim:#9DB0A5; --bone-faint:#6E877B;
+  --cherry:#D9453C; --brass:#D7A93E;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --measure:68ch;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  margin:0; background:var(--felt-800); color:var(--bone);
+  font-family:var(--sans); font-size:17px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+/* Textura de tapete, muy sutil */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.55;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+main,header,footer{position:relative; z-index:1}
+
+/* ---------- idioma ---------- */
+html[data-lang="es"] [data-l="en"]{display:none}
+html[data-lang="en"] [data-l="es"]{display:none}
+
+/* ---------- tipografía ---------- */
+h1,h2,h3,.eyebrow,.lede-num{font-family:var(--mono); font-weight:600}
+h2{font-size:clamp(1.5rem,3.4vw,2.1rem); line-height:1.15; letter-spacing:-.01em; margin:0 0 .6rem}
+h3{font-size:1.06rem; letter-spacing:.02em; margin:2.2rem 0 .5rem; color:var(--brass)}
+p{margin:0 0 1.1rem; max-width:var(--measure)}
+ul,ol{max-width:var(--measure); padding-left:1.2rem}
+li{margin:.35rem 0}
+a{color:var(--brass); text-underline-offset:3px; text-decoration-thickness:1px}
+a:hover{color:var(--bone)}
+:focus-visible{outline:2px solid var(--brass); outline-offset:3px; border-radius:2px}
+code,kbd{font-family:var(--mono); font-size:.88em; background:var(--felt-900); padding:.12em .38em; border-radius:3px; color:var(--brass)}
+strong{color:#fff}
+.eyebrow{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--bone-faint); display:block; margin-bottom:.5rem}
+
+/* ---------- estructura ---------- */
+.wrap{max-width:1040px; margin:0 auto; padding:0 clamp(1.1rem,4vw,2.5rem)}
+section{padding:clamp(3.2rem,8vw,5.5rem) 0; border-top:1px solid var(--felt-600)}
+section:first-of-type{border-top:0}
+
+/* ---------- barra superior ---------- */
+header{position:sticky; top:0; z-index:20; background:rgba(11,31,25,.93); backdrop-filter:blur(8px); border-bottom:1px solid var(--felt-600)}
+.bar{display:flex; align-items:center; gap:1rem; padding:.7rem 0; max-width:1040px; margin:0 auto; padding-inline:clamp(1.1rem,4vw,2.5rem)}
+.brand{font-family:var(--mono); font-weight:600; letter-spacing:.04em; font-size:.95rem; margin-right:auto}
+.bar{gap:.7rem}
+@media(min-width:860px){.bar{gap:1.1rem}}
+.brand span{color:var(--brass)}
+nav.jump{display:none; gap:1.1rem; font-family:var(--mono); font-size:.78rem; letter-spacing:.06em}
+@media(min-width:860px){nav.jump{display:flex}}
+nav.jump a{color:var(--bone-dim); text-decoration:none}
+nav.jump a:hover{color:var(--brass)}
+.dlcta{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--brass); text-decoration:none; border:1px solid var(--brass);
+  border-radius:999px; padding:.36rem .8rem; white-space:nowrap; transition:background .15s,color .15s;
+}
+.dlcta:hover,.dlcta:focus-visible{background:var(--brass); color:var(--felt-900); font-weight:700}
+.dlcta .full{display:none}
+@media(min-width:560px){.dlcta .full{display:inline}}
+.langtog{display:flex; border:1px solid var(--felt-500); border-radius:999px; overflow:hidden; font-family:var(--mono); font-size:.72rem}
+.langtog button{background:none; border:0; color:var(--bone-dim); padding:.32rem .62rem; cursor:pointer; font:inherit; letter-spacing:.08em}
+.langtog button[aria-pressed="true"]{background:var(--brass); color:var(--felt-900); font-weight:700}
+
+/* ---------- dados (motivo estructural) ---------- */
+.die{width:38px; height:38px; flex:0 0 38px; border-radius:7px; background:var(--bone);
+     display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr); padding:5px; gap:2px;
+     box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 -2px 3px rgba(0,0,0,.12)}
+.die i{border-radius:50%; background:var(--felt-900); width:6px; height:6px; align-self:center; justify-self:center}
+.die i.c1{grid-area:1/1}.die i.c2{grid-area:1/2}.die i.c3{grid-area:1/3}
+.die i.c4{grid-area:2/1}.die i.c5{grid-area:2/2}.die i.c6{grid-area:2/3}
+.die i.c7{grid-area:3/1}.die i.c8{grid-area:3/2}.die i.c9{grid-area:3/3}
+.die.red{background:var(--cherry)} .die.red i{background:#fff}
+
+/* ---------- héroe ---------- */
+.hero{padding-top:clamp(3rem,9vw,6rem); padding-bottom:clamp(2.5rem,7vw,4.5rem)}
+.hero h1{font-size:clamp(2.05rem,6.4vw,3.9rem); line-height:1.03; letter-spacing:-.03em; margin:0 0 1.3rem; max-width:16ch}
+.hero h1 em{font-style:normal; color:var(--brass)}
+.hero .sub{font-size:clamp(1.02rem,2.1vw,1.2rem); color:var(--bone-dim); max-width:56ch}
+.dicerow{display:flex; gap:.5rem; margin-bottom:1.8rem; flex-wrap:wrap}
+.arrowline{display:flex; align-items:center; gap:.9rem; flex-wrap:wrap; margin:2.2rem 0 0;
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.06em; color:var(--bone-faint)}
+.arrowline b{color:var(--bone); font-weight:600}
+
+/* ---------- avisos ---------- */
+.note{border-left:3px solid var(--brass); background:var(--felt-700); padding:1rem 1.2rem; margin:1.6rem 0; max-width:var(--measure); border-radius:0 5px 5px 0}
+.note.warn{border-left-color:var(--cherry)}
+.note p:last-child{margin-bottom:0}
+.note .tag{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); display:block; margin-bottom:.4rem}
+.note.warn .tag{color:var(--cherry)}
+
+/* ---------- pasos ---------- */
+.step{display:grid; grid-template-columns:38px 1fr; gap:1.1rem; margin:0 0 2.6rem; align-items:start}
+.step .body{min-width:0}
+.step h3{margin:.1rem 0 .5rem; color:var(--bone); font-size:1.14rem; letter-spacing:0}
+.calc{font-family:var(--mono); font-size:.84rem; background:var(--felt-900); border:1px solid var(--felt-600);
+      border-radius:6px; padding:.85rem 1rem; overflow-x:auto; white-space:pre; color:var(--bone-dim); margin:.9rem 0; line-height:1.55}
+.calc b{color:var(--brass); font-weight:600}
+
+/* ---------- firma visual: el partidor de bits ---------- */
+.splitter{background:var(--felt-900); border:1px solid var(--felt-600); border-radius:8px; padding:1.3rem; margin:1.6rem 0}
+.bitstring{font-family:var(--mono); font-size:.78rem; line-height:2.1; word-break:break-all; letter-spacing:.06em}
+.grp{padding:.16em .1em; border-radius:3px; transition:background .12s, color .12s; cursor:default}
+.grp:nth-child(odd){background:rgba(215,169,62,.10)}
+.grp:nth-child(even){background:rgba(233,227,213,.06)}
+.grp.on{background:var(--brass); color:var(--felt-900); font-weight:700}
+.grp.ck{outline:1px dashed var(--cherry); outline-offset:1px}
+.wordgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:.4rem; margin-top:1.2rem}
+.wcell{display:flex; align-items:baseline; gap:.5rem; font-family:var(--mono); font-size:.82rem;
+       padding:.4rem .55rem; border-radius:5px; border:1px solid var(--felt-600); background:var(--felt-800); cursor:default}
+.wcell:hover,.wcell.on{border-color:var(--brass); background:var(--felt-700)}
+.wcell .i{color:var(--bone-faint); font-size:.72rem; min-width:1.4em}
+.wcell .w{color:var(--bone); font-weight:600}
+.wcell .x{color:var(--bone-faint); font-size:.72rem; margin-left:auto}
+
+/* ---------- tablas ---------- */
+.tbl{width:100%; border-collapse:collapse; margin:1.3rem 0; font-size:.92rem; display:block; overflow-x:auto; white-space:nowrap}
+.tbl th,.tbl td{text-align:left; padding:.6rem .9rem; border-bottom:1px solid var(--felt-600)}
+.tbl th{font-family:var(--mono); font-size:.72rem; letter-spacing:.13em; text-transform:uppercase; color:var(--bone-faint); font-weight:600}
+.tbl td:first-child{color:var(--bone-dim)}
+.tbl .good{color:var(--brass)} .tbl .bad{color:var(--cherry)}
+
+/* ---------- pros y contras ---------- */
+.cols{display:grid; gap:1.4rem; margin-top:1.2rem}
+@media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
+.card{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.3rem 1.4rem}
+.card h3{margin-top:0}
+.card ul{margin:0; padding-left:1.1rem; max-width:none}
+.card li::marker{color:var(--bone-faint)}
+.card.pro h3{color:var(--brass)} .card.con h3{color:var(--cherry)}
+
+/* ---------- scripts ---------- */
+.scripts{display:grid; gap:1rem; margin-top:1.4rem}
+@media(min-width:820px){.scripts{grid-template-columns:repeat(3,1fr)}}
+.sc{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.2rem; display:flex; flex-direction:column}
+.sc h3{margin:0 0 .2rem; color:var(--bone); font-size:1.05rem}
+.sc .req{font-family:var(--mono); font-size:.74rem; color:var(--bone-faint); margin-bottom:.8rem; letter-spacing:.03em}
+.sc p{font-size:.9rem; color:var(--bone-dim); margin-bottom:1rem; max-width:none}
+.sc .acts{margin-top:auto; display:flex; gap:.5rem; flex-wrap:wrap}
+.btn{font-family:var(--mono); font-size:.76rem; letter-spacing:.07em; text-transform:uppercase;
+     border:1px solid var(--felt-500); background:none; color:var(--bone); padding:.5rem .8rem;
+     border-radius:5px; cursor:pointer; text-decoration:none; display:inline-block}
+.btn:hover{border-color:var(--brass); color:var(--brass)}
+.btn.solid{background:var(--brass); border-color:var(--brass); color:var(--felt-900); font-weight:700}
+.btn.solid:hover{background:var(--bone); border-color:var(--bone); color:var(--felt-900)}
+.hashline{font-family:var(--mono); font-size:.68rem; color:var(--bone-faint); word-break:break-all; margin-top:.8rem; line-height:1.5}
+
+/* visor */
+.viewer{margin-top:1.6rem; border:1px solid var(--felt-600); border-radius:8px; overflow:hidden; display:none}
+.viewer.open{display:block}
+.vhead{display:flex; align-items:center; gap:.8rem; padding:.6rem .9rem; background:var(--felt-700); border-bottom:1px solid var(--felt-600); font-family:var(--mono); font-size:.78rem}
+.vhead .name{color:var(--brass)}
+.vhead #vstatus{color:var(--bone-faint); font-size:.72rem; letter-spacing:.02em}
+.vhead #vstatus.ok{color:var(--brass)}
+.vhead #vstatus.bad{color:var(--cherry); font-weight:700}
+.vhead button{margin-left:auto}
+pre.code{margin:0; padding:1rem; background:var(--felt-900); overflow:auto; max-height:60vh; font-family:var(--mono); font-size:.74rem; line-height:1.6; color:var(--bone-dim); white-space:pre}
+
+/* ---------- checklist ---------- */
+.check{list-style:none; padding:0; margin:1.5rem 0 0; max-width:var(--measure)}
+.check li{position:relative; padding-left:2.3rem; margin:0 0 1rem; line-height:1.6}
+.check li::before{
+  content:""; position:absolute; left:0; top:.34em;
+  width:1.15rem; height:1.15rem; border:1.5px solid var(--brass);
+  border-radius:3px; background:var(--felt-900);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+}
+.check li:last-child{margin-bottom:0}
+
+/* ---------- pie ---------- */
+footer{border-top:1px solid var(--felt-600); padding:2.6rem 0 3.4rem; font-size:.87rem; color:var(--bone-dim)}
+footer .fp{font-family:var(--mono); font-size:.76rem; color:var(--bone); word-break:break-all; background:var(--felt-900); padding:.7rem .9rem; border-radius:5px; border:1px solid var(--felt-600); display:inline-block; margin:.4rem 0 1rem}
+footer a{word-break:break-all}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">dice<span>-</span>seed</div>
+    <nav class="jump" aria-label="Secciones">
+      <a href="#metodo" data-l="es">Método</a><a href="#metodo" data-l="en">Method</a>
+      <a href="#balance" data-l="es">Ventajas</a><a href="#balance" data-l="en">Trade-offs</a>
+      <a href="#verificar" data-l="es">Verificar</a><a href="#verificar" data-l="en">Verify</a>
+    </nav>
+    <a class="dlcta" href="#scripts" data-l="es"><span class="full">Descarga </span>Scripts ↓</a>
+    <a class="dlcta" href="#scripts" data-l="en"><span class="full">Download </span>Scripts ↓</a>
+    <div class="langtog" role="group" aria-label="Idioma / Language">
+      <button id="btn-es" aria-pressed="true" onclick="setLang('es')">ES</button>
+      <button id="btn-en" aria-pressed="false" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ══════════════ HÉROE ══════════════ -->
+<section class="hero">
+  <div class="dicerow" aria-hidden="true">
+    <span class="die"><i class="c1"></i><i class="c3"></i><i class="c5"></i><i class="c7"></i><i class="c9"></i></span>
+    <span class="die"><i class="c1"></i><i class="c9"></i></span>
+    <span class="die red"><i class="c5"></i></span>
+    <span class="die"><i class="c1"></i><i class="c3"></i><i class="c4"></i><i class="c6"></i><i class="c7"></i><i class="c9"></i></span>
+    <span class="die"><i class="c1"></i><i class="c3"></i><i class="c7"></i><i class="c9"></i></span>
+  </div>
+
+  <h1 data-l="es">50 tiradas de dado. <em>12 palabras.</em> Cero confianza.</h1>
+  <h1 data-l="en">50 dice rolls. <em>12 words.</em> Zero trust.</h1>
+
+  <p class="sub" data-l="es">Cuando generas una semilla en una cartera, confías en que su generador de números aleatorios es bueno y honesto. No puedes comprobarlo. Con un dado sí: la aleatoriedad la produces tú, delante de ti, y cada paso del cálculo se puede verificar a mano.</p>
+  <p class="sub" data-l="en">When a wallet generates a seed for you, you're trusting that its random number generator is both sound and honest. You can't check either. With a die you can: you produce the randomness yourself, in front of you, and every step of the calculation can be verified by hand.</p>
+
+  <div class="arrowline">
+    <b>50 × d6</b> → <span data-l="es">base 6</span><span data-l="en">base 6</span> → <b>128 bits</b> → <span>SHA-256</span> → <b>132 bits</b> → <span data-l="es">base 2048</span><span data-l="en">base 2048</span> → <b data-l="es">12 palabras</b><b data-l="en">12 words</b>
+  </div>
+
+  <div class="note warn" style="margin-top:2.4rem">
+    <span class="tag" data-l="es">Esta página no genera semillas</span><span class="tag" data-l="en">This page does not generate seeds</span>
+    <p data-l="es">Aquí solo se explica el método y se distribuyen los scripts. Una semilla real se genera en un ordenador <strong>sin conexión a internet</strong>, ejecutando el script en tu propia máquina. Ningún navegador es un sitio seguro para esto, incluido este.</p>
+    <p data-l="en">This page only explains the method and hosts the scripts. A real seed is generated on a computer <strong>with no internet connection</strong>, by running the script on your own machine. No browser is a safe place for this — including this one.</p>
+  </div>
+</section>
+
+<!-- ══════════════ MÉTODO ══════════════ -->
+<section id="metodo">
+  <span class="eyebrow" data-l="es">Cómo funciona</span><span class="eyebrow" data-l="en">How it works</span>
+  <h2 data-l="es">El método, en cinco pasos</h2>
+  <h2 data-l="en">The method, in five steps</h2>
+  <p data-l="es">BIP-39 es el estándar que convierte una tira de bits aleatorios en palabras memorizables. Lo único que hace falta añadir es una fuente de aleatoriedad que puedas auditar: un dado.</p>
+  <p data-l="en">BIP-39 is the standard that turns a string of random bits into memorable words. The only thing you need to supply is a source of randomness you can audit: a die.</p>
+
+  <!-- paso 1 -->
+  <div class="step">
+    <span class="die" aria-hidden="true"><i class="c5"></i></span>
+    <div class="body">
+      <h3 data-l="es">Las tiradas forman un número en base 6</h3>
+      <h3 data-l="en">The rolls form a number in base 6</h3>
+      <p data-l="es">Un dado de 6 caras aporta log₂(6) = <strong>2,585 bits</strong> por tirada, así que 50 tiradas dan 129,25 bits: suficiente para los 128 que necesitamos. El dado no tiene cara 0, así que a cada tirada se le resta 1.</p>
+      <p data-l="en">A six-sided die yields log₂(6) = <strong>2.585 bits</strong> per roll, so 50 rolls give 129.25 bits — enough for the 128 we need. A die has no zero face, so each roll has 1 subtracted from it.</p>
+      <div class="calc">3 1 6 4  →  <b>2 0 5 3</b>
+
+N = 2·6³ + 0·6² + 5·6¹ + 3·6⁰ = <b>465</b></div>
+      <p data-l="es">La <strong>primera tirada es el dígito más significativo</strong>. Cambiar el orden de las tiradas produce una semilla completamente distinta, así que la secuencia importa tanto como los números.</p>
+      <p data-l="en">The <strong>first roll is the most significant digit</strong>. Reordering the rolls produces a completely different seed, so the sequence matters as much as the numbers.</p>
+    </div>
+  </div>
+
+  <!-- paso 2 -->
+  <div class="step">
+    <span class="die" aria-hidden="true"><i class="c1"></i><i class="c9"></i></span>
+    <div class="body">
+      <h3 data-l="es">Recortar a 128 bits exactos</h3>
+      <h3 data-l="en">Trim to exactly 128 bits</h3>
+      <p data-l="es">Sobran 1,25 bits, así que nos quedamos con los 128 más bajos. Eso introduce un sesgo mínimo: la entropía efectiva baja a 127,97 bits en vez de 128.</p>
+      <p data-l="en">There's a 1.25-bit surplus, so we keep the lowest 128. That introduces a tiny bias: effective entropy drops to 127.97 bits instead of 128.</p>
+      <div class="calc">6⁵⁰ / 2¹²⁸ = 2,375   →   <b data-l="es">se pierden 0,03 bits</b><b data-l="en">0.03 bits lost</b></div>
+      <p data-l="es">Los scripts incluyen un bloque comentado que elimina el sesgo por completo mediante rechazo, a cambio de repetir las 50 tiradas el 15,8&nbsp;% de las veces.</p>
+      <p data-l="en">The scripts include a commented-out block that removes the bias entirely by rejection, at the cost of re-rolling all 50 dice 15.8% of the time.</p>
+    </div>
+  </div>
+
+  <!-- paso 3 -->
+  <div class="step">
+    <span class="die" aria-hidden="true"><i class="c1"></i><i class="c5"></i><i class="c9"></i></span>
+    <div class="body">
+      <h3 data-l="es">Añadir 4 bits de checksum</h3>
+      <h3 data-l="en">Add 4 checksum bits</h3>
+      <p data-l="es">Se calcula SHA-256 de la entropía y se toman los <strong>4 primeros bits del resultado</strong>. No aportan seguridad: sirven para que, si copias mal una palabra, la cartera rechace la frase en vez de abrir en silencio una cuenta vacía que no es la tuya.</p>
+      <p data-l="en">Take SHA-256 of the entropy and keep the <strong>first 4 bits of the result</strong>. They add no security — they exist so that if you mis-copy a word, your wallet rejects the phrase instead of silently opening an empty account that isn't yours.</p>
+      <div class="calc">SHA-256(<span data-l="es">entropía</span><span data-l="en">entropy</span>) = <b>05</b>fda87a…
+
+byte 0x05 = 0000 0101
+             <b>^^^^</b>  ← checksum</div>
+    </div>
+  </div>
+
+  <!-- paso 4 — FIRMA VISUAL -->
+  <div class="step">
+    <span class="die" aria-hidden="true"><i class="c1"></i><i class="c3"></i><i class="c7"></i><i class="c9"></i></span>
+    <div class="body">
+      <h3 data-l="es">Partir los 132 bits en 12 grupos de 11</h3>
+      <h3 data-l="en">Split the 132 bits into 12 groups of 11</h3>
+      <p data-l="es">La lista oficial tiene <strong>2048 = 2¹¹</strong> palabras, así que cada palabra codifica exactamente 11 bits. Y 128 + 4 = 132 = 12 × 11, sin que sobre ni falte un bit. Todo el diseño de BIP-39 gira en torno a esa división limpia.</p>
+      <p data-l="en">The official list has <strong>2048 = 2¹¹</strong> words, so each word encodes exactly 11 bits. And 128 + 4 = 132 = 12 × 11, with not a single bit left over. BIP-39's whole design turns on that clean division.</p>
+
+      <div class="splitter">
+        <div class="eyebrow" data-l="es">Pasa el ratón por un grupo o una palabra</div>
+        <div class="eyebrow" data-l="en">Hover a group or a word</div>
+        <div class="bitstring" id="bits"></div>
+        <div class="wordgrid" id="words"></div>
+        <p style="font-size:.78rem;color:var(--bone-faint);margin:1rem 0 0;max-width:none" data-l="es">Los 4 últimos bits (recuadro rojo) son el checksum. Ejemplo público de demostración: <strong>nunca uses esta semilla</strong>.</p>
+        <p style="font-size:.78rem;color:var(--bone-faint);margin:1rem 0 0;max-width:none" data-l="en">The last 4 bits (red outline) are the checksum. Public demo example: <strong>never use this seed</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- paso 5 -->
+  <div class="step">
+    <span class="die" aria-hidden="true"><i class="c1"></i><i class="c3"></i><i class="c5"></i><i class="c7"></i><i class="c9"></i></span>
+    <div class="body">
+      <h3 data-l="es">Cada número es una posición en la lista</h3>
+      <h3 data-l="en">Each number is a position in the list</h3>
+      <p data-l="es">El índice se busca tal cual en la lista oficial de 2048 palabras. Un detalle útil: <strong>las 4 primeras letras de cada palabra son únicas</strong>, así que puedes apuntar solo cuatro letras sin perder información — práctico si grabas la semilla en metal.</p>
+      <p data-l="en">The index is looked up directly in the official 2048-word list. A useful detail: <strong>the first 4 letters of every word are unique</strong>, so you can write down just four letters without losing information — handy when stamping a seed into metal.</p>
+      <div class="note">
+        <span class="tag" data-l="es">La idea que lo explica todo</span><span class="tag" data-l="en">The idea that ties it together</span>
+        <p data-l="es">Los pasos 1 y 4 son <strong>la misma operación en sentidos opuestos</strong>: una conversión de base. Primero <em>leemos</em> los dados en base 6 para construir un número; después <em>escribimos</em> ese número en base 2048 para obtener las palabras.</p>
+        <p data-l="en">Steps 1 and 4 are <strong>the same operation in opposite directions</strong>: a base conversion. First we <em>read</em> the dice in base 6 to build a number; then we <em>write</em> that number in base 2048 to get the words.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ VENTAJAS Y DESVENTAJAS ══════════════ -->
+<section id="balance">
+  <span class="eyebrow" data-l="es">Sin adornos</span><span class="eyebrow" data-l="en">Straight talk</span>
+  <h2 data-l="es">Ventajas y desventajas</h2>
+  <h2 data-l="en">Advantages and drawbacks</h2>
+  <p data-l="es">Este método no es la mejor opción para todo el mundo. Antes de usarlo conviene saber qué ganas y qué pierdes frente a las alternativas.</p>
+  <p data-l="en">This method isn't the best option for everyone. Before using it, it's worth knowing what you gain and what you give up compared with the alternatives.</p>
+
+  <div class="cols">
+    <div class="card pro">
+      <h3 data-l="es">A favor</h3><h3 data-l="en">In favour</h3>
+      <ul data-l="es">
+        <li><strong>Aleatoriedad auditable.</strong> No dependes del generador de nadie. La ves caer sobre la mesa.</li>
+        <li><strong>Verificable paso a paso.</strong> Cualquiera puede repetir el cálculo con lápiz y papel y llegar al mismo resultado.</li>
+        <li><strong>Sin dependencias.</strong> Los tres scripts usan solo la biblioteca estándar de su lenguaje. Nada que descargar, nada que pueda estar comprometido.</li>
+        <li><strong>Protege de un fallo concreto.</strong> Ha habido dispositivos con generadores rotos. Un dado no tiene firmware.</li>
+        <li><strong>Se enseña.</strong> Al terminar entiendes de verdad qué es tu semilla, no solo que la tienes.</li>
+      </ul>
+      <ul data-l="en">
+        <li><strong>Auditable randomness.</strong> You don't depend on anyone's generator. You watch it land on the table.</li>
+        <li><strong>Verifiable step by step.</strong> Anyone can redo the calculation with pen and paper and reach the same result.</li>
+        <li><strong>No dependencies.</strong> All three scripts use only their language's standard library. Nothing to download, nothing that can be compromised.</li>
+        <li><strong>Guards against a real failure.</strong> Devices have shipped with broken generators. A die has no firmware.</li>
+        <li><strong>It teaches.</strong> When you're done you actually understand what your seed is, not just that you have one.</li>
+      </ul>
+    </div>
+
+    <div class="card con">
+      <h3 data-l="es">En contra</h3><h3 data-l="en">Against</h3>
+      <ul data-l="es">
+        <li><strong>La semilla pasa por un ordenador de propósito general.</strong> Una cartera hardware nunca deja salir la clave del dispositivo. Aquí sí aparece en pantalla y en memoria.</li>
+        <li><strong>Es fácil equivocarse.</strong> Anotar mal una de las 50 tiradas, o una palabra, y el resultado es otro. El checksum ayuda, pero no lo cubre todo.</li>
+        <li><strong>Requiere disciplina.</strong> Sin red, sin fotos, sin copiar y pegar, sin dejar rastro en el historial. Un solo descuido lo invalida.</li>
+        <li><strong>Un dado sesgado te arruina el trabajo.</strong> Un dado barato con esquinas desgastadas no es uniforme.</li>
+        <li><strong>No es para todo el mundo.</strong> Si no vas a seguir el proceso con cuidado, una cartera hardware reputada te protege más que un método manual mal ejecutado.</li>
+      </ul>
+      <ul data-l="en">
+        <li><strong>The seed passes through a general-purpose computer.</strong> A hardware wallet never lets the key leave the device. Here it does appear on screen and in memory.</li>
+        <li><strong>Mistakes are easy.</strong> Mis-record one of the 50 rolls, or one word, and you get a different result. The checksum helps, but it doesn't catch everything.</li>
+        <li><strong>It demands discipline.</strong> No network, no photos, no copy-paste, no shell history. One lapse undoes it.</li>
+        <li><strong>A biased die ruins the work.</strong> A cheap die with worn corners isn't uniform.</li>
+        <li><strong>It isn't for everyone.</strong> If you won't follow the process carefully, a reputable hardware wallet protects you better than a manual method done badly.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 data-l="es">Comparación con la herramienta de Ian Coleman</h3>
+  <h3 data-l="en">Compared with Ian Coleman's tool</h3>
+  <p data-l="es">Es la herramienta BIP-39 más conocida y también acepta dados. En 2020 se reportó que su método de dados tenía sesgo, y <strong>se corrigió en la versión 0.5.0 de octubre de 2020</strong>. No es un fallo actual. Pero la corrección cambió el método, y eso crea una incompatibilidad que conviene conocer.</p>
+  <p data-l="en">It's the best-known BIP-39 tool and it also accepts dice. In 2020 its dice method was reported as biased, and <strong>this was fixed in version 0.5.0, October 2020</strong>. It is not a current flaw. But the fix changed the method, and that creates an incompatibility worth knowing about.</p>
+
+  <table class="tbl">
+    <thead><tr>
+      <th></th>
+      <th data-l="es">Estos scripts</th><th data-l="en">These scripts</th>
+      <th data-l="es">Ian Coleman 0.5.0+</th><th data-l="en">Ian Coleman 0.5.0+</th>
+    </tr></thead>
+    <tbody>
+      <tr><td data-l="es">Bits por tirada</td><td data-l="en">Bits per roll</td><td>2,585</td><td>1,667</td></tr>
+      <tr><td data-l="es">Tiradas para 128 bits</td><td data-l="en">Rolls for 128 bits</td><td class="good">50, <span data-l="es">siempre</span><span data-l="en">always</span></td><td>~77 <span data-l="es">de media, variable</span><span data-l="en">on average, variable</span></td></tr>
+      <tr><td data-l="es">Sesgo</td><td data-l="en">Bias</td><td>0,03 bits</td><td class="good" data-l="es">ninguno</td><td class="good" data-l="en">none</td></tr>
+      <tr><td data-l="es">Con el bloque de rechazo</td><td data-l="en">With rejection enabled</td><td class="good" data-l="es">ninguno · ~59 tiradas</td><td class="good" data-l="en">none · ~59 rolls</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <span class="tag" data-l="es">No mezcles las dos herramientas</span><span class="tag" data-l="en">Don't mix the two tools</span>
+    <p data-l="es">Las mismas 50 tiradas dan <strong>palabras distintas</strong> en cada herramienta. Ninguna está mal: BIP-39 estandariza el paso <em>entropía → palabras</em>, pero <strong>no estandariza el paso dados → entropía</strong>. Ahí cada implementación elige. Si quieres verificar tu resultado con otra herramienta, introduce la <strong>entropía en hexadecimal</strong> que imprime el script, nunca las tiradas.</p>
+    <p data-l="en">The same 50 rolls produce <strong>different words</strong> in each tool. Neither is wrong: BIP-39 standardises the <em>entropy → words</em> step, but it <strong>does not standardise dice → entropy</strong>. Each implementation chooses there. To cross-check your result with another tool, feed it the <strong>hex entropy</strong> the script prints — never the dice rolls.</p>
+  </div>
+</section>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<section id="scripts">
+  <span class="eyebrow" data-l="es">Descarga y auditoría</span><span class="eyebrow" data-l="en">Download and audit</span>
+  <h2 data-l="es">Los tres scripts</h2>
+  <h2 data-l="en">The three scripts</h2>
+  <p data-l="es">La misma lógica en tres lenguajes. Elige el que ya tengas instalado, o el que sepas leer mejor: los tres están comentados paso a paso y producen resultados idénticos. Cada uno incluye <code>--test</code>, que comprueba los vectores oficiales de BIP-39, y <code>--detalle</code>, que imprime todos los valores intermedios.</p>
+  <p data-l="en">The same logic in three languages. Pick whichever you already have installed, or whichever you can read best: all three are commented step by step and produce identical results. Each includes <code>--test</code>, which checks the official BIP-39 vectors, and <code>--detalle</code>, which prints every intermediate value.</p>
+
+  <div class="scripts">
+    <div class="sc">
+      <h3>Python</h3>
+      <div class="req">python3 · <span data-l="es">versión 3.2 o superior</span><span data-l="en">version 3.2 or later</span></div>
+      <p data-l="es">La opción por defecto: ya viene instalado en macOS y en cualquier Linux. Es el más corto y el más fácil de leer sin saber programar.</p>
+      <p data-l="en">The default choice: already installed on macOS and any Linux. It's the shortest and the easiest to read without programming experience.</p>
+      <div class="acts">
+        <button class="btn solid" onclick="descargar('bip39_dados.py')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
+        <button class="btn" onclick="verCodigo('bip39_dados.py')" data-l="es">Ver código</button>
+        <button class="btn" onclick="verCodigo('bip39_dados.py')" data-l="en">View code</button>
+      </div>
+      <div class="hashline">66d9f0b42288760e7f228e59ffa4e51f1fc9fa509b36f5f1900aedb1fab02d20</div>
+    </div>
+
+    <div class="sc">
+      <h3>JavaScript</h3>
+      <div class="req">Node.js · <span data-l="es">versión 10.4 o superior</span><span data-l="en">version 10.4 or later</span></div>
+      <p data-l="es">Para quien ya trabaja con Node. Usa <code>BigInt</code>, así que el propio lenguaje impide perder precisión por accidente.</p>
+      <p data-l="en">For anyone already working with Node. It uses <code>BigInt</code>, so the language itself prevents accidental loss of precision.</p>
+      <div class="acts">
+        <button class="btn solid" onclick="descargar('bip39_dados.js')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
+        <button class="btn" onclick="verCodigo('bip39_dados.js')" data-l="es">Ver código</button>
+        <button class="btn" onclick="verCodigo('bip39_dados.js')" data-l="en">View code</button>
+      </div>
+      <div class="hashline">19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9</div>
+    </div>
+
+    <div class="sc">
+      <h3>C#</h3>
+      <div class="req">.NET 6+ · Mono · .NET Framework 4.6</div>
+      <p data-l="es">Para entornos Windows. Se compila a un ejecutable, útil si prefieres no instalar un intérprete en la máquina sin red.</p>
+      <p data-l="en">For Windows environments. It compiles to an executable, useful if you'd rather not install an interpreter on the offline machine.</p>
+      <div class="acts">
+        <button class="btn solid" onclick="descargar('bip39_dados.cs')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
+        <button class="btn" onclick="verCodigo('bip39_dados.cs')" data-l="es">Ver código</button>
+        <button class="btn" onclick="verCodigo('bip39_dados.cs')" data-l="en">View code</button>
+      </div>
+      <div class="hashline">de49a113e47e2afbaf3649abb2a01102618c4027521e4022bf92de11d082a726</div>
+    </div>
+  </div>
+
+  <div class="viewer" id="viewer">
+    <div class="vhead">
+      <span class="name" id="vname"></span>
+      <span id="vstatus"></span>
+      <button class="btn" onclick="cerrarVisor()" data-l="es">Cerrar</button>
+      <button class="btn" onclick="cerrarVisor()" data-l="en">Close</button>
+    </div>
+    <pre class="code" id="vcode"></pre>
+  </div>
+
+  <div class="note">
+    <span class="tag" data-l="es">Esta página se verifica a sí misma</span><span class="tag" data-l="en">This page verifies itself</span>
+    <p data-l="es">Los tres scripts van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
+    <p data-l="en">All three scripts live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
+    <p data-l="es"><strong>Guarda esta página</strong> (Ctrl-S / Cmd-S) y llévatela al ordenador sin red: funciona entera sin conexión, scripts incluidos. Aun así, la verificación que de verdad cuenta es la firma GPG de abajo.</p>
+    <p data-l="en"><strong>Save this page</strong> (Ctrl-S / Cmd-S) and take it to your offline computer: it works completely without a connection, scripts included. Even so, the verification that really counts is the GPG signature below.</p>
+  </div>
+</section>
+
+<!-- ══════════════ VERIFICAR ══════════════ -->
+<section id="verificar">
+  <span class="eyebrow" data-l="es">No te fíes de esta página</span><span class="eyebrow" data-l="en">Don't trust this page</span>
+  <h2 data-l="es">Verificar antes de usar</h2>
+  <h2 data-l="en">Verify before you use it</h2>
+  <p data-l="es">Si alguien comprometiera este servidor podría cambiar los scripts <em>y</em> los hashes que aparecen arriba. Por eso la verificación real ocurre <strong>en tu terminal</strong>, contra una identidad publicada en varios sitios a la vez.</p>
+  <p data-l="en">If someone compromised this server they could change both the scripts <em>and</em> the hashes shown above. That's why real verification happens <strong>in your terminal</strong>, against an identity published in several places at once.</p>
+
+  <h3 data-l="es">Una vez: confiar en la clave</h3>
+  <h3 data-l="en">Once: trust the key</h3>
+  <div class="calc">gpg --import ADN-clave-publica.asc
+gpg --fingerprint D37CBA46955B9F95</div>
+  <p data-l="es">Debe salir exactamente esta huella. <strong>Compárala con los otros canales</strong> (repositorio, servidor de claves, Nostr). Este es el único paso que de verdad importa, y el que todo el mundo se salta:</p>
+  <p data-l="en">It must print exactly this fingerprint. <strong>Compare it against the other channels</strong> (repository, key server, Nostr). This is the one step that really matters, and the one everybody skips:</p>
+  <div class="calc"><b>05E6 6020 81F7 AFD7 2957  36B4 D37C BA46 955B 9F95</b></div>
+
+  <h3 data-l="es">En cada descarga</h3>
+  <h3 data-l="en">On every download</h3>
+  <div class="calc" data-l="es">gpg --verify SHA256SUMS.asc SHA256SUMS   <b># ¿la firma es de ADN?</b>
+
+shasum -a 256 -c SHA256SUMS              <b># macOS</b>
+sha256sum -c SHA256SUMS                  <b># Linux</b></div>
+  <div class="calc" data-l="en">gpg --verify SHA256SUMS.asc SHA256SUMS   <b># is the signature ADN's?</b>
+
+shasum -a 256 -c SHA256SUMS              <b># macOS</b>
+sha256sum -c SHA256SUMS                  <b># Linux</b></div>
+  <p data-l="es">En Windows con PowerShell no existe la comprobación automática, hay que comparar a mano con <code>Get-FileHash bip39_dados.py -Algorithm SHA256</code>.</p>
+  <p data-l="en">Windows PowerShell has no automatic check; compare by hand with <code>Get-FileHash bip39_dados.py -Algorithm SHA256</code>.</p>
+
+  <div class="note">
+    <span class="tag" data-l="es">El aviso que asusta y no debería</span><span class="tag" data-l="en">The warning that scares people, and shouldn't</span>
+    <p data-l="es">GPG dirá <code>Good signature from "ADN"</code> y justo debajo:</p>
+    <p data-l="en">GPG will say <code>Good signature from "ADN"</code> and right below it:</p>
+    <div class="calc">gpg: WARNING: This key is not certified
+     with a trusted signature!</div>
+    <p data-l="es">Ese aviso es <strong>normal</strong>. Solo significa que no has marcado la clave como de confianza en tu llavero, algo que casi nadie hace. Lo que importa es que ponga <code>Good signature</code> y que la huella coincida. La identidad debe ser exactamente <code>ADN &lt;fotoshi@protonmail.com&gt;</code>; cualquier otra es motivo para detenerse.</p>
+    <p data-l="en">That warning is <strong>normal</strong>. It only means you haven't marked the key as trusted in your keyring, which almost nobody does. What matters is that it says <code>Good signature</code> and that the fingerprint matches. The identity must be exactly <code>ADN &lt;fotoshi@protonmail.com&gt;</code>; anything else is a reason to stop.</p>
+  </div>
+
+  <h3 data-l="es">Sello temporal en Bitcoin (opcional)</h3>
+  <h3 data-l="en">Bitcoin timestamp (optional)</h3>
+  <p data-l="es">La firma dice <em>quién</em>. El sello dice <em>cuándo</em>. Juntos impiden que alguien publique en el futuro una versión maliciosa haciéndola pasar por la original.</p>
+  <p data-l="en">The signature says <em>who</em>. The timestamp says <em>when</em>. Together they stop anyone from later publishing a malicious version and passing it off as the original.</p>
+  <div class="calc">pip3 install opentimestamps-client
+ots verify SHA256SUMS.ots</div>
+</section>
+
+<!-- ══════════════ CHECKLIST ══════════════ -->
+<section id="antes">
+  <span class="eyebrow" data-l="es">Última parada</span><span class="eyebrow" data-l="en">Last stop</span>
+  <h2 data-l="es">Antes de usarlo con dinero real</h2>
+  <h2 data-l="en">Before using this with real money</h2>
+
+  <ul class="check" data-l="es">
+    <li>El ordenador está <strong>sin red</strong>: WiFi apagado y cable desconectado. Idealmente arrancado desde un USB live que se olvide todo al apagar.</li>
+    <li>Has <strong>verificado la firma</strong> y comparado la huella con al menos dos canales distintos.</li>
+    <li>Has ejecutado <code>--test</code> y ha pasado los vectores oficiales.</li>
+    <li>Usas un <strong>dado de casino</strong>, con aristas vivas, sobre una superficie dura.</li>
+    <li>Vas a apuntar las palabras <strong>en papel</strong>, en orden. Nada de fotos, ficheros ni gestores de contraseñas.</li>
+    <li>Vas a <strong>verificar la entropía</strong> en hexadecimal con una segunda herramienta antes de enviar fondos.</li>
+    <li>Sabes que vas a <strong>borrar la pantalla</strong> al terminar y apagar la máquina.</li>
+    <li>Has probado a <strong>restaurar la semilla</strong> en una cartera vacía antes de confiarle nada.</li>
+  </ul>
+  <ul class="check" data-l="en">
+    <li>The computer is <strong>offline</strong>: WiFi off, cable unplugged. Ideally booted from a live USB that forgets everything on shutdown.</li>
+    <li>You have <strong>verified the signature</strong> and compared the fingerprint against at least two separate channels.</li>
+    <li>You ran <code>--test</code> and it passed the official vectors.</li>
+    <li>You're using a <strong>casino-grade die</strong> with sharp edges, on a hard surface.</li>
+    <li>You will write the words <strong>on paper</strong>, in order. No photos, no files, no password managers.</li>
+    <li>You will <strong>cross-check the hex entropy</strong> with a second tool before sending funds.</li>
+    <li>You know to <strong>clear the screen</strong> afterwards and shut the machine down.</li>
+    <li>You have <strong>test-restored the seed</strong> into an empty wallet before trusting it with anything.</li>
+  </ul>
+
+  <div class="note warn">
+    <span class="tag" data-l="es">Sin garantías</span><span class="tag" data-l="en">No warranty</span>
+    <p data-l="es">Este material se publica bajo licencia MIT, tal cual y sin garantía de ningún tipo. Eres responsable de auditar el código que ejecutas y de custodiar tu propia semilla. Nadie puede recuperarla por ti.</p>
+    <p data-l="en">This material is published under the MIT licence, as is and without warranty of any kind. You are responsible for auditing the code you run and for safeguarding your own seed. Nobody can recover it for you.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p data-l="es"><strong>Firmado por ADN.</strong> Huella GPG:</p>
+    <p data-l="en"><strong>Signed by ADN.</strong> GPG fingerprint:</p>
+    <div class="fp">05E6 6020 81F7 AFD7 2957  36B4 D37C BA46 955B 9F95</div>
+    <p>
+      <a href="https://github.com/fotoshi/dice-seed">github.com/fotoshi/dice-seed</a><br>
+      <span style="font-size:.78rem;color:var(--bone-faint)">npub1gke055lhcwndepddgzl4gdcgy86h0g5vgsjsmtpl44mftt6zyn9s8wk7e5</span>
+    </p>
+    <p data-l="es" style="font-size:.82rem;color:var(--bone-faint)">Licencia MIT · Sin rastreadores, sin cookies, sin recursos externos. Esta página no se comunica con ningún servidor una vez cargada.</p>
+    <p data-l="en" style="font-size:.82rem;color:var(--bone-faint)">MIT licence · No trackers, no cookies, no external resources. This page talks to no server once loaded.</p>
+  </div>
+</footer>
+
+<script type="text/plain" id="src-bip39_dados.py">
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+bip39_dados.py - 12 palabras BIP39 a partir de 50 tiradas de un dado de 6 caras.
+
+USO:
+    python3 bip39_dados.py              # pide las tiradas por teclado
+    python3 bip39_dados.py --detalle    # ademas, muestra todos los pasos intermedios
+    python3 bip39_dados.py --test       # autocomprobacion con vectores oficiales
+
+EL METODO EN CINCO PASOS:
+
+    50 tiradas de d6
+          |  PASO 1: leer las tiradas como un numero en base 6
+          v
+    numero entero N  (unos 129,25 bits)
+          |  PASO 2: quedarse con los 128 bits bajos
+          v
+    entropia = 16 bytes = 128 bits
+          |  PASO 3: checksum = 4 primeros bits de SHA-256(entropia)
+          v
+    132 bits = 128 + 4
+          |  PASO 4: escribir esos 132 bits como un numero en base 2048
+          v
+    12 indices (0-2047)
+          |  PASO 5: buscar cada indice en la lista oficial
+          v
+    12 palabras
+
+    Los pasos 1 y 4 son la MISMA operacion en sentidos opuestos: una conversion
+    de base. Primero LEEMOS los dados en base 6, luego ESCRIBIMOS el resultado
+    en base 2048. Esa simetria es el corazon del metodo.
+
+SEGURIDAD:
+    - Ejecutalo en un ordenador SIN RED, idealmente arrancado desde un USB live.
+    - No pases las tiradas como argumento: quedarian en el historial del shell.
+    - Apunta las palabras en papel. Borra la pantalla al terminar (clear/reset).
+    - Usa un dado de casino y tira sobre una superficie dura.
+    - El modo --detalle es para APRENDER. No lo uses con una semilla real que
+      vayas a custodiar: llena la pantalla de material sensible sin necesidad.
+
+Dependencias: ninguna, solo la libreria estandar de Python 3.
+"""
+
+import hashlib
+import sys
+
+
+# ============================================================================
+#  CONSTANTES - de donde sale cada numero
+# ============================================================================
+
+# Un dado de 6 caras aporta log2(6) = 2,585 bits por tirada.
+# 128 / 2,585 = 49,5 -> redondeando hacia arriba, 50 tiradas.
+# (Con 49 tendriamos 126,66 bits: insuficiente.)
+N_TIRADAS = 50
+
+# BIP39 define frases de 128, 160, 192, 224 o 256 bits de entropia.
+# 128 bits es el estandar para 12 palabras.
+BITS_ENTROPIA = 128
+
+# La especificacion fija: bits de checksum = bits de entropia / 32.
+# 128 / 32 = 4 bits. No aportan seguridad, sirven para detectar erratas.
+BITS_CHECKSUM = BITS_ENTROPIA // 32
+
+# La lista oficial tiene 2048 palabras, y 2048 = 2^11.
+# Por eso cada palabra codifica exactamente 11 bits.
+PALABRAS_EN_LISTA = 2048
+BITS_POR_PALABRA = 11
+
+# 128 + 4 = 132 bits, y 132 / 11 = 12 palabras exactas. No sobra ni falta
+# un bit: todo el diseño de BIP39 esta hecho para que esta division sea limpia.
+N_PALABRAS = (BITS_ENTROPIA + BITS_CHECKSUM) // BITS_POR_PALABRA
+
+
+# ============================================================================
+#  PASOS 1 y 2 - de las tiradas a la entropia
+# ============================================================================
+
+def tiradas_a_entropia(tiradas):
+    """Convierte una lista de 50 enteros del 1 al 6 en 16 bytes de entropia."""
+
+    if len(tiradas) != N_TIRADAS:
+        raise ValueError("hacen falta exactamente %d tiradas, recibidas %d"
+                         % (N_TIRADAS, len(tiradas)))
+
+    # ---- PASO 1: las tiradas son los digitos de un numero en base 6 --------
+    #
+    # El dado no tiene cara 0, asi que restamos 1 para pasar de 1..6 a 0..5.
+    # El numero que formamos es:
+    #
+    #     N = d1*6^49 + d2*6^48 + ... + d49*6^1 + d50*6^0
+    #
+    # pero no calculamos potencias: usamos el METODO DE HORNER, que multiplica
+    # el acumulado por 6 y le suma el digito nuevo. Con las tiradas 3,1,6,4:
+    #
+    #     n=0  -> 0*6+2 = 2  -> 2*6+0 = 12  -> 12*6+5 = 77  -> 77*6+3 = 465
+    #
+    # OJO: la PRIMERA tirada acaba siendo el digito MAS SIGNIFICATIVO.
+    # Cambiar el orden de las tiradas produce una semilla completamente
+    # distinta. Por eso el script imprime la secuencia al final.
+    #
+    n = 0
+    for tirada in tiradas:
+        if not 1 <= tirada <= 6:
+            raise ValueError("tirada fuera del rango 1-6: %r" % tirada)
+        n = n * 6 + (tirada - 1)
+
+    # ---- PASO 2: recortar a exactamente 128 bits ---------------------------
+    #
+    # N puede llegar hasta 6^50 - 1, que es 2,375 veces mayor que 2^128.
+    # Nos quedamos con los 128 bits bajos.
+    #
+    # SOBRE EL SESGO: como 6^50 no es multiplo exacto de 2^128, algunos
+    # resultados salen 3 veces y otros 2. La entropia real baja de 128 a
+    # 127,97 bits. Son 0,03 bits: irrelevante.
+    #
+    # Si lo quieres matematicamente perfecto, descomenta estas dos lineas.
+    # Solo aceptan N por debajo de 2^129, rango en el que 2^128 cabe justo
+    # 2 veces y el modulo es uniforme. Precio: repetir las 50 tiradas el
+    # 15,8% de las veces.
+    #
+    # if n >= (1 << (BITS_ENTROPIA + 1)):
+    #     raise ValueError("descarta estas tiradas y vuelve a tirar los 50 dados")
+
+    n %= 1 << BITS_ENTROPIA                     # 1 << 128 es 2^128, escrito barato
+
+    # to_bytes empaqueta el entero en 16 bytes, el mas significativo primero
+    # ("big endian"), que es el orden en que leemos los numeros a mano.
+    return n.to_bytes(BITS_ENTROPIA // 8, "big")
+
+
+# ============================================================================
+#  PASO 3 - el checksum
+# ============================================================================
+
+def calcular_checksum(entropia):
+    """Devuelve los 4 bits de checksum como un entero de 0 a 15."""
+
+    # Los 4 bits mas altos del PRIMER BYTE del SHA-256 de la entropia.
+    #
+    #     SHA-256(entropia) = 05 fd a8 7a ...
+    #                         ^^
+    #                    primer byte = 0x05 = 00000101
+    #                                         ----
+    #                                    >> 4 nos deja 0000
+    #
+    # Estos bits no dan seguridad. Sirven para que, si copias mal una palabra,
+    # la cartera rechace la frase (15 de cada 16 veces) en lugar de abrir en
+    # silencio una cuenta vacia que no es la tuya.
+    digest = hashlib.sha256(entropia).digest()
+    return digest[0] >> (8 - BITS_CHECKSUM)
+
+
+# ============================================================================
+#  PASOS 4 y 5 - de la entropia a las palabras
+# ============================================================================
+
+def entropia_a_indices(entropia):
+    """Convierte 16 bytes de entropia en los 12 indices de la lista (0-2047)."""
+
+    if len(entropia) != BITS_ENTROPIA // 8:
+        raise ValueError("la entropia debe ocupar %d bytes, recibidos %d"
+                         % (BITS_ENTROPIA // 8, len(entropia)))
+
+    # ---- Juntar entropia y checksum en un solo numero de 132 bits ----------
+    #
+    #     [ ---------- 128 bits de entropia ---------- ][chk]
+    #      \___________________ 132 bits ___________________/
+    #
+    # "<< 4" corre la entropia 4 posiciones a la izquierda, dejando 4 ceros al
+    # final. El "|" (OR bit a bit) rellena justo esos 4 huecos con el checksum.
+    v = int.from_bytes(entropia, "big") << BITS_CHECKSUM
+    v |= calcular_checksum(entropia)
+
+    # ---- PASO 4: escribir esos 132 bits como un numero en base 2048 --------
+    #
+    # Esto es EXACTAMENTE la operacion inversa del paso 1. Alli leiamos digitos
+    # en base 6 y construiamos un numero; aqui cogemos un numero y extraemos
+    # sus digitos en base 2048. Cada "digito" es un indice de palabra.
+    #
+    # divmod(v, 2048) devuelve (cociente, resto) de una sola vez. El resto son
+    # los 11 bits mas bajos, es decir, el digito de menor peso. Como salen del
+    # reves, cada uno se inserta al PRINCIPIO de la lista.
+    #
+    #   v = 1746·2048^11 + 1100·2048^10 + ... + 723·2048^1 + 896·2048^0
+    #        \____/                                            \___/
+    #      1ª palabra                                     12ª palabra
+    #
+    indices = []
+    for _ in range(N_PALABRAS):
+        v, resto = divmod(v, PALABRAS_EN_LISTA)
+        indices.insert(0, resto)
+
+    # Tras 12 divisiones no debe quedar nada: 12 x 11 = 132 bits, justos.
+    assert v == 0, "quedaron bits sin repartir: revisa las constantes"
+
+    return indices
+
+
+def entropia_a_palabras(entropia):
+    """Convierte 16 bytes de entropia en las 12 palabras BIP39."""
+    # ---- PASO 5: cada indice es una posicion directa en la lista -----------
+    return [PALABRAS[i] for i in entropia_a_indices(entropia)]
+
+
+# ============================================================================
+#  ENTRADA - leer las tiradas del usuario
+# ============================================================================
+
+def leer_tiradas():
+    """Lee 50 tiradas por teclado (o por stdin, si se canaliza)."""
+    print("Introduce %d tiradas de un dado de 6 caras." % N_TIRADAS)
+    print("Puedes escribirlas de una en una o varias juntas (ej: 3 1 6 4 2).")
+    print("Ctrl-C para abortar.\n")
+
+    tiradas = []
+    while len(tiradas) < N_TIRADAS:
+        try:
+            linea = input("[%2d/%d] > " % (len(tiradas), N_TIRADAS))
+        except EOFError:
+            break                       # se acabo la entrada canalizada
+        for caracter in linea:
+            if caracter in "123456":
+                tiradas.append(int(caracter))
+                if len(tiradas) == N_TIRADAS:
+                    break
+            elif not caracter.isspace() and caracter not in ",;-.":
+                # Avisamos en vez de callar: un '7' o una 'o' suele ser un error
+                # de tecleo que cambiaria la semilla sin que te enteres.
+                print("  aviso: ignorado el caracter %r" % caracter)
+
+    if len(tiradas) != N_TIRADAS:
+        sys.exit("\nERROR: solo se leyeron %d tiradas de %d. Abortado."
+                 % (len(tiradas), N_TIRADAS))
+    return tiradas
+
+
+# ============================================================================
+#  SALIDA
+# ============================================================================
+
+def mostrar_resultado(tiradas, entropia, palabras):
+    """Imprime lo imprescindible: tiradas, entropia y las 12 palabras."""
+    print("\n" + "=" * 52)
+    print("Tiradas  : %s" % "".join(str(t) for t in tiradas))
+    print("Entropia : %s" % entropia.hex())
+    print("=" * 52)
+    for numero, palabra in enumerate(palabras, 1):
+        print("%2d. %s" % (numero, palabra))
+    print("=" * 52)
+    print("Apuntalas en papel, en este orden. Nunca en un fichero ni en una foto.")
+    print("Cuando termines: 'clear' o 'reset' para limpiar la pantalla.")
+
+
+def mostrar_detalle(tiradas, entropia):
+    """Imprime todos los valores intermedios. Solo para aprender y enseñar."""
+    # Rehacemos el paso 1 aqui para poder enseñar N, que la funcion principal
+    # no devuelve. Mantener las funciones "limpias" y explicar aparte es mejor
+    # que llenarlas de prints.
+    n = 0
+    for tirada in tiradas:
+        n = n * 6 + (tirada - 1)
+
+    checksum = calcular_checksum(entropia)
+    indices = entropia_a_indices(entropia)
+    bits_entropia = bin(int.from_bytes(entropia, "big"))[2:].zfill(BITS_ENTROPIA)
+    bits_totales = bits_entropia + bin(checksum)[2:].zfill(BITS_CHECKSUM)
+
+    print("\n" + "-" * 52)
+    print("PASO 1 - las tiradas como numero en base 6")
+    print("-" * 52)
+    print("  digitos (tirada - 1): %s" % "".join(str(t - 1) for t in tiradas))
+    print("  N  = %d" % n)
+    print("  N ocupa %d bits" % n.bit_length())
+
+    print("\n" + "-" * 52)
+    print("PASO 2 - recorte a %d bits" % BITS_ENTROPIA)
+    print("-" * 52)
+    print("  2^%d = %d" % (BITS_ENTROPIA, 1 << BITS_ENTROPIA))
+    if n < (1 << BITS_ENTROPIA):
+        print("  N ya era menor que 2^%d: el modulo no cambia nada" % BITS_ENTROPIA)
+    else:
+        print("  N era mayor: se le resta 2^%d" % BITS_ENTROPIA)
+    print("  entropia (hex) = %s" % entropia.hex())
+    print("  entropia (bin) = %s" % bits_entropia)
+
+    print("\n" + "-" * 52)
+    print("PASO 3 - checksum")
+    print("-" * 52)
+    print("  SHA-256(entropia) = %s..." % hashlib.sha256(entropia).hexdigest()[:16])
+    primer_byte = hashlib.sha256(entropia).digest()[0]
+    print("  primer byte = 0x%02x = %s" % (primer_byte, bin(primer_byte)[2:].zfill(8)))
+    print("  >> %d          =     %s   <- checksum"
+          % (8 - BITS_CHECKSUM, bin(checksum)[2:].zfill(BITS_CHECKSUM)))
+
+    print("\n" + "-" * 52)
+    print("PASOS 4 y 5 - %d bits en grupos de %d"
+          % (BITS_ENTROPIA + BITS_CHECKSUM, BITS_POR_PALABRA))
+    print("-" * 52)
+    print("  %s|%s" % (bits_entropia, bin(checksum)[2:].zfill(BITS_CHECKSUM)))
+    for posicion, indice in enumerate(indices):
+        inicio = posicion * BITS_POR_PALABRA
+        grupo = bits_totales[inicio:inicio + BITS_POR_PALABRA]
+        print("  %2d. %s = %4d -> %s" % (posicion + 1, grupo, indice, PALABRAS[indice]))
+    print("\n  Los ultimos %d bits del grupo %d son el checksum calculado arriba."
+          % (BITS_CHECKSUM, N_PALABRAS))
+
+
+# ============================================================================
+#  AUTOCOMPROBACION
+# ============================================================================
+
+def autotest():
+    """Vectores oficiales de BIP39 mas comprobaciones propias del dado."""
+
+    # La lista incrustada debe ser byte a byte la oficial. Si alguien cambiara
+    # una sola letra, este hash no cuadraria.
+    assert len(PALABRAS) == PALABRAS_EN_LISTA, "la lista debe tener 2048 palabras"
+    assert hashlib.sha256(("\n".join(PALABRAS) + "\n").encode()).hexdigest() == \
+        "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda", \
+        "la lista de palabras NO coincide con la oficial de BIP-39"
+
+    # Vectores de la especificacion (github.com/trezor/python-mnemonic).
+    vectores = [
+        ("00000000000000000000000000000000",
+         "abandon abandon abandon abandon abandon abandon "
+         "abandon abandon abandon abandon abandon about"),
+        ("7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+         "legal winner thank year wave sausage worth useful "
+         "legal winner thank yellow"),
+        ("80808080808080808080808080808080",
+         "letter advice cage absurd amount doctor acoustic avoid "
+         "letter advice cage above"),
+        ("ffffffffffffffffffffffffffffffff",
+         "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"),
+        ("9e885d952ad362caeb4efe34a8e91bd2",
+         "ozone drill grab fiber curtain grace pudding thank "
+         "cruise elder eight picnic"),
+    ]
+    for hexadecimal, esperado in vectores:
+        obtenido = " ".join(entropia_a_palabras(bytes.fromhex(hexadecimal)))
+        assert obtenido == esperado, "fallo en %s:\n  %s" % (hexadecimal, obtenido)
+
+    # 50 unos -> todos los digitos a 0 -> N = 0 -> entropia toda a cero
+    assert tiradas_a_entropia([1] * 50).hex() == "0" * 32
+    # 50 seises -> N = 6^50 - 1, contrastado con el calculo directo
+    assert tiradas_a_entropia([6] * 50) == \
+        ((6 ** 50 - 1) % (1 << 128)).to_bytes(16, "big")
+    # El orden importa: la primera tirada pesa 6^49, la ultima 6^0
+    assert tiradas_a_entropia([2] + [1] * 49) != tiradas_a_entropia([1] * 49 + [2])
+    # Las constantes tienen que encajar sin bits sobrantes
+    assert N_PALABRAS * BITS_POR_PALABRA == BITS_ENTROPIA + BITS_CHECKSUM
+    assert 2 ** BITS_POR_PALABRA == PALABRAS_EN_LISTA
+
+    print("OK: %d vectores oficiales y 5 comprobaciones propias superados."
+          % len(vectores))
+
+
+# ============================================================================
+#  PROGRAMA PRINCIPAL
+# ============================================================================
+
+def main():
+    if "--test" in sys.argv:
+        autotest()
+        return
+
+    tiradas = leer_tiradas()
+    entropia = tiradas_a_entropia(tiradas)          # pasos 1 y 2
+    palabras = entropia_a_palabras(entropia)        # pasos 3, 4 y 5
+
+    if "--detalle" in sys.argv:
+        mostrar_detalle(tiradas, entropia)
+    mostrar_resultado(tiradas, entropia, palabras)
+
+
+
+# ============================================================================
+#  LA LISTA OFICIAL - 2048 palabras del BIP-39 en ingles
+# ============================================================================
+#
+#  Dos propiedades la hacen especial:
+#    - Son 2048 = 2^11 exactas, para que cada palabra valga 11 bits limpios.
+#    - Las 4 PRIMERAS LETRAS son unicas (aban/abil/able...). Puedes apuntar
+#      solo 4 letras por palabra sin perder informacion, util al grabar la
+#      semilla en metal.
+#
+#  El orden es alfabetico y NO se puede alterar: la posicion ES el dato.
+#
+PALABRAS = """
+    abandon ability able about above absent absorb abstract
+    absurd abuse access accident account accuse achieve acid
+    acoustic acquire across act action actor actress actual
+    adapt add addict address adjust admit adult advance
+    advice aerobic affair afford afraid again age agent
+    agree ahead aim air airport aisle alarm album
+    alcohol alert alien all alley allow almost alone
+    alpha already also alter always amateur amazing among
+    amount amused analyst anchor ancient anger angle angry
+    animal ankle announce annual another answer antenna antique
+    anxiety any apart apology appear apple approve april
+    arch arctic area arena argue arm armed armor
+    army around arrange arrest arrive arrow art artefact
+    artist artwork ask aspect assault asset assist assume
+    asthma athlete atom attack attend attitude attract auction
+    audit august aunt author auto autumn average avocado
+    avoid awake aware away awesome awful awkward axis
+    baby bachelor bacon badge bag balance balcony ball
+    bamboo banana banner bar barely bargain barrel base
+    basic basket battle beach bean beauty because become
+    beef before begin behave behind believe below belt
+    bench benefit best betray better between beyond bicycle
+    bid bike bind biology bird birth bitter black
+    blade blame blanket blast bleak bless blind blood
+    blossom blouse blue blur blush board boat body
+    boil bomb bone bonus book boost border boring
+    borrow boss bottom bounce box boy bracket brain
+    brand brass brave bread breeze brick bridge brief
+    bright bring brisk broccoli broken bronze broom brother
+    brown brush bubble buddy budget buffalo build bulb
+    bulk bullet bundle bunker burden burger burst bus
+    business busy butter buyer buzz cabbage cabin cable
+    cactus cage cake call calm camera camp can
+    canal cancel candy cannon canoe canvas canyon capable
+    capital captain car carbon card cargo carpet carry
+    cart case cash casino castle casual cat catalog
+    catch category cattle caught cause caution cave ceiling
+    celery cement census century cereal certain chair chalk
+    champion change chaos chapter charge chase chat cheap
+    check cheese chef cherry chest chicken chief child
+    chimney choice choose chronic chuckle chunk churn cigar
+    cinnamon circle citizen city civil claim clap clarify
+    claw clay clean clerk clever click client cliff
+    climb clinic clip clock clog close cloth cloud
+    clown club clump cluster clutch coach coast coconut
+    code coffee coil coin collect color column combine
+    come comfort comic common company concert conduct confirm
+    congress connect consider control convince cook cool copper
+    copy coral core corn correct cost cotton couch
+    country couple course cousin cover coyote crack cradle
+    craft cram crane crash crater crawl crazy cream
+    credit creek crew cricket crime crisp critic crop
+    cross crouch crowd crucial cruel cruise crumble crunch
+    crush cry crystal cube culture cup cupboard curious
+    current curtain curve cushion custom cute cycle dad
+    damage damp dance danger daring dash daughter dawn
+    day deal debate debris decade december decide decline
+    decorate decrease deer defense define defy degree delay
+    deliver demand demise denial dentist deny depart depend
+    deposit depth deputy derive describe desert design desk
+    despair destroy detail detect develop device devote diagram
+    dial diamond diary dice diesel diet differ digital
+    dignity dilemma dinner dinosaur direct dirt disagree discover
+    disease dish dismiss disorder display distance divert divide
+    divorce dizzy doctor document dog doll dolphin domain
+    donate donkey donor door dose double dove draft
+    dragon drama drastic draw dream dress drift drill
+    drink drip drive drop drum dry duck dumb
+    dune during dust dutch duty dwarf dynamic eager
+    eagle early earn earth easily east easy echo
+    ecology economy edge edit educate effort egg eight
+    either elbow elder electric elegant element elephant elevator
+    elite else embark embody embrace emerge emotion employ
+    empower empty enable enact end endless endorse enemy
+    energy enforce engage engine enhance enjoy enlist enough
+    enrich enroll ensure enter entire entry envelope episode
+    equal equip era erase erode erosion error erupt
+    escape essay essence estate eternal ethics evidence evil
+    evoke evolve exact example excess exchange excite exclude
+    excuse execute exercise exhaust exhibit exile exist exit
+    exotic expand expect expire explain expose express extend
+    extra eye eyebrow fabric face faculty fade faint
+    faith fall false fame family famous fan fancy
+    fantasy farm fashion fat fatal father fatigue fault
+    favorite feature february federal fee feed feel female
+    fence festival fetch fever few fiber fiction field
+    figure file film filter final find fine finger
+    finish fire firm first fiscal fish fit fitness
+    fix flag flame flash flat flavor flee flight
+    flip float flock floor flower fluid flush fly
+    foam focus fog foil fold follow food foot
+    force forest forget fork fortune forum forward fossil
+    foster found fox fragile frame frequent fresh friend
+    fringe frog front frost frown frozen fruit fuel
+    fun funny furnace fury future gadget gain galaxy
+    gallery game gap garage garbage garden garlic garment
+    gas gasp gate gather gauge gaze general genius
+    genre gentle genuine gesture ghost giant gift giggle
+    ginger giraffe girl give glad glance glare glass
+    glide glimpse globe gloom glory glove glow glue
+    goat goddess gold good goose gorilla gospel gossip
+    govern gown grab grace grain grant grape grass
+    gravity great green grid grief grit grocery group
+    grow grunt guard guess guide guilt guitar gun
+    gym habit hair half hammer hamster hand happy
+    harbor hard harsh harvest hat have hawk hazard
+    head health heart heavy hedgehog height hello helmet
+    help hen hero hidden high hill hint hip
+    hire history hobby hockey hold hole holiday hollow
+    home honey hood hope horn horror horse hospital
+    host hotel hour hover hub huge human humble
+    humor hundred hungry hunt hurdle hurry hurt husband
+    hybrid ice icon idea identify idle ignore ill
+    illegal illness image imitate immense immune impact impose
+    improve impulse inch include income increase index indicate
+    indoor industry infant inflict inform inhale inherit initial
+    inject injury inmate inner innocent input inquiry insane
+    insect inside inspire install intact interest into invest
+    invite involve iron island isolate issue item ivory
+    jacket jaguar jar jazz jealous jeans jelly jewel
+    job join joke journey joy judge juice jump
+    jungle junior junk just kangaroo keen keep ketchup
+    key kick kid kidney kind kingdom kiss kit
+    kitchen kite kitten kiwi knee knife knock know
+    lab label labor ladder lady lake lamp language
+    laptop large later latin laugh laundry lava law
+    lawn lawsuit layer lazy leader leaf learn leave
+    lecture left leg legal legend leisure lemon lend
+    length lens leopard lesson letter level liar liberty
+    library license life lift light like limb limit
+    link lion liquid list little live lizard load
+    loan lobster local lock logic lonely long loop
+    lottery loud lounge love loyal lucky luggage lumber
+    lunar lunch luxury lyrics machine mad magic magnet
+    maid mail main major make mammal man manage
+    mandate mango mansion manual maple marble march margin
+    marine market marriage mask mass master match material
+    math matrix matter maximum maze meadow mean measure
+    meat mechanic medal media melody melt member memory
+    mention menu mercy merge merit merry mesh message
+    metal method middle midnight milk million mimic mind
+    minimum minor minute miracle mirror misery miss mistake
+    mix mixed mixture mobile model modify mom moment
+    monitor monkey monster month moon moral more morning
+    mosquito mother motion motor mountain mouse move movie
+    much muffin mule multiply muscle museum mushroom music
+    must mutual myself mystery myth naive name napkin
+    narrow nasty nation nature near neck need negative
+    neglect neither nephew nerve nest net network neutral
+    never news next nice night noble noise nominee
+    noodle normal north nose notable note nothing notice
+    novel now nuclear number nurse nut oak obey
+    object oblige obscure observe obtain obvious occur ocean
+    october odor off offer office often oil okay
+    old olive olympic omit once one onion online
+    only open opera opinion oppose option orange orbit
+    orchard order ordinary organ orient original orphan ostrich
+    other outdoor outer output outside oval oven over
+    own owner oxygen oyster ozone pact paddle page
+    pair palace palm panda panel panic panther paper
+    parade parent park parrot party pass patch path
+    patient patrol pattern pause pave payment peace peanut
+    pear peasant pelican pen penalty pencil people pepper
+    perfect permit person pet phone photo phrase physical
+    piano picnic picture piece pig pigeon pill pilot
+    pink pioneer pipe pistol pitch pizza place planet
+    plastic plate play please pledge pluck plug plunge
+    poem poet point polar pole police pond pony
+    pool popular portion position possible post potato pottery
+    poverty powder power practice praise predict prefer prepare
+    present pretty prevent price pride primary print priority
+    prison private prize problem process produce profit program
+    project promote proof property prosper protect proud provide
+    public pudding pull pulp pulse pumpkin punch pupil
+    puppy purchase purity purpose purse push put puzzle
+    pyramid quality quantum quarter question quick quit quiz
+    quote rabbit raccoon race rack radar radio rail
+    rain raise rally ramp ranch random range rapid
+    rare rate rather raven raw razor ready real
+    reason rebel rebuild recall receive recipe record recycle
+    reduce reflect reform refuse region regret regular reject
+    relax release relief rely remain remember remind remove
+    render renew rent reopen repair repeat replace report
+    require rescue resemble resist resource response result retire
+    retreat return reunion reveal review reward rhythm rib
+    ribbon rice rich ride ridge rifle right rigid
+    ring riot ripple risk ritual rival river road
+    roast robot robust rocket romance roof rookie room
+    rose rotate rough round route royal rubber rude
+    rug rule run runway rural sad saddle sadness
+    safe sail salad salmon salon salt salute same
+    sample sand satisfy satoshi sauce sausage save say
+    scale scan scare scatter scene scheme school science
+    scissors scorpion scout scrap screen script scrub sea
+    search season seat second secret section security seed
+    seek segment select sell seminar senior sense sentence
+    series service session settle setup seven shadow shaft
+    shallow share shed shell sheriff shield shift shine
+    ship shiver shock shoe shoot shop short shoulder
+    shove shrimp shrug shuffle shy sibling sick side
+    siege sight sign silent silk silly silver similar
+    simple since sing siren sister situate six size
+    skate sketch ski skill skin skirt skull slab
+    slam sleep slender slice slide slight slim slogan
+    slot slow slush small smart smile smoke smooth
+    snack snake snap sniff snow soap soccer social
+    sock soda soft solar soldier solid solution solve
+    someone song soon sorry sort soul sound soup
+    source south space spare spatial spawn speak special
+    speed spell spend sphere spice spider spike spin
+    spirit split spoil sponsor spoon sport spot spray
+    spread spring spy square squeeze squirrel stable stadium
+    staff stage stairs stamp stand start state stay
+    steak steel stem step stereo stick still sting
+    stock stomach stone stool story stove strategy street
+    strike strong struggle student stuff stumble style subject
+    submit subway success such sudden suffer sugar suggest
+    suit summer sun sunny sunset super supply supreme
+    sure surface surge surprise surround survey suspect sustain
+    swallow swamp swap swarm swear sweet swift swim
+    swing switch sword symbol symptom syrup system table
+    tackle tag tail talent talk tank tape target
+    task taste tattoo taxi teach team tell ten
+    tenant tennis tent term test text thank that
+    theme then theory there they thing this thought
+    three thrive throw thumb thunder ticket tide tiger
+    tilt timber time tiny tip tired tissue title
+    toast tobacco today toddler toe together toilet token
+    tomato tomorrow tone tongue tonight tool tooth top
+    topic topple torch tornado tortoise toss total tourist
+    toward tower town toy track trade traffic tragic
+    train transfer trap trash travel tray treat tree
+    trend trial tribe trick trigger trim trip trophy
+    trouble truck true truly trumpet trust truth try
+    tube tuition tumble tuna tunnel turkey turn turtle
+    twelve twenty twice twin twist two type typical
+    ugly umbrella unable unaware uncle uncover under undo
+    unfair unfold unhappy uniform unique unit universe unknown
+    unlock until unusual unveil update upgrade uphold upon
+    upper upset urban urge usage use used useful
+    useless usual utility vacant vacuum vague valid valley
+    valve van vanish vapor various vast vault vehicle
+    velvet vendor venture venue verb verify version very
+    vessel veteran viable vibrant vicious victory video view
+    village vintage violin virtual virus visa visit visual
+    vital vivid vocal voice void volcano volume vote
+    voyage wage wagon wait walk wall walnut want
+    warfare warm warrior wash wasp waste water wave
+    way wealth weapon wear weasel weather web wedding
+    weekend weird welcome west wet whale what wheat
+    wheel when where whip whisper wide width wife
+    wild will win window wine wing wink winner
+    winter wire wisdom wise wish witness wolf woman
+    wonder wood wool word work world worry worth
+    wrap wreck wrestle wrist write wrong yard year
+    yellow you young youth zebra zero zone zoo
+""".split()
+
+
+if __name__ == "__main__":
+    main()
+</script>
+<script type="text/plain" id="src-bip39_dados.js">
+#!/usr/bin/env node
+/**
+ * bip39_dados.js - 12 palabras BIP39 a partir de 50 tiradas de un dado de 6 caras.
+ *
+ * USO:
+ *     node bip39_dados.js              // pide las tiradas por teclado
+ *     node bip39_dados.js --detalle    // ademas, muestra los pasos intermedios
+ *     node bip39_dados.js --test       // autocomprobacion con vectores oficiales
+ *
+ * EL METODO EN CINCO PASOS:
+ *
+ *     50 tiradas de d6
+ *           |  PASO 1: leer las tiradas como un numero en base 6
+ *           v
+ *     numero entero N  (unos 129,25 bits)
+ *           |  PASO 2: quedarse con los 128 bits bajos
+ *           v
+ *     entropia = 16 bytes = 128 bits
+ *           |  PASO 3: checksum = 4 primeros bits de SHA-256(entropia)
+ *           v
+ *     132 bits = 128 + 4
+ *           |  PASO 4: escribir esos 132 bits como un numero en base 2048
+ *           v
+ *     12 indices (0-2047)
+ *           |  PASO 5: buscar cada indice en la lista oficial
+ *           v
+ *     12 palabras
+ *
+ *     Los pasos 1 y 4 son la MISMA operacion en sentidos opuestos: una conversion
+ *     de base. Primero LEEMOS los dados en base 6, luego ESCRIBIMOS el resultado
+ *     en base 2048.
+ *
+ * NOTA SOBRE JavaScript:
+ *     El tipo Number de JS solo maneja enteros exactos hasta 2^53. Nuestro N tiene
+ *     129 bits, asi que TODO el calculo usa BigInt, el tipo de precision arbitraria
+ *     que existe de forma nativa desde ES2020 (Node 10.4+). Se distingue por el
+ *     sufijo "n" en los literales: 6n, 2048n, 0n.
+ *     Mezclar BigInt y Number en una operacion lanza TypeError, y eso es BUENO:
+ *     el lenguaje te impide perder precision por accidente.
+ *
+ * SEGURIDAD:
+ *     - Ejecutalo en un ordenador SIN RED, idealmente arrancado desde un USB live.
+ *     - No pases las tiradas como argumento: quedarian en el historial del shell.
+ *     - Apunta las palabras en papel. Borra la pantalla al terminar (clear/reset).
+ *     - El modo --detalle es para APRENDER, no para una semilla real.
+ *
+ * Dependencias: ninguna, solo modulos incluidos en Node.js.
+ */
+
+'use strict';
+
+const crypto = require('crypto');
+const readline = require('readline');
+
+// ============================================================================
+//  CONSTANTES - de donde sale cada numero
+// ============================================================================
+
+// Un dado de 6 caras aporta log2(6) = 2,585 bits por tirada.
+// 128 / 2,585 = 49,5 -> redondeando hacia arriba, 50 tiradas.
+const N_TIRADAS = 50;
+
+// BIP39 admite 128, 160, 192, 224 o 256 bits. 128 es el estandar de 12 palabras.
+const BITS_ENTROPIA = 128;
+
+// La especificacion fija: bits de checksum = bits de entropia / 32.
+const BITS_CHECKSUM = BITS_ENTROPIA / 32;              // 4
+
+// La lista oficial tiene 2048 palabras, y 2048 = 2^11.
+const PALABRAS_EN_LISTA = 2048;
+const BITS_POR_PALABRA = 11;
+
+// 128 + 4 = 132, y 132 / 11 = 12 exactas. No sobra ni falta un bit.
+const N_PALABRAS = (BITS_ENTROPIA + BITS_CHECKSUM) / BITS_POR_PALABRA;   // 12
+
+// Versiones BigInt de las constantes que entran en aritmetica grande.
+// En JS no puedes escribir "n * 6": hay que escribir "n * 6n".
+const SEIS = 6n;
+const DOS_ELEVADO_A_128 = 1n << BigInt(BITS_ENTROPIA);
+const BASE_2048 = BigInt(PALABRAS_EN_LISTA);
+
+
+// ============================================================================
+//  PASOS 1 y 2 - de las tiradas a la entropia
+// ============================================================================
+
+/** Convierte un array de 50 enteros del 1 al 6 en un Buffer de 16 bytes. */
+function tiradasAEntropia(tiradas) {
+  if (tiradas.length !== N_TIRADAS) {
+    throw new Error(`hacen falta exactamente ${N_TIRADAS} tiradas, recibidas ${tiradas.length}`);
+  }
+
+  // ---- PASO 1: las tiradas son los digitos de un numero en base 6 ----------
+  //
+  // El dado no tiene cara 0, asi que restamos 1 para pasar de 1..6 a 0..5.
+  // El numero que formamos es:
+  //
+  //     N = d1*6^49 + d2*6^48 + ... + d49*6^1 + d50*6^0
+  //
+  // pero no calculamos potencias: usamos el METODO DE HORNER, que multiplica
+  // el acumulado por 6 y le suma el digito nuevo. Con las tiradas 3,1,6,4:
+  //
+  //     n=0 -> 0*6+2 = 2 -> 2*6+0 = 12 -> 12*6+5 = 77 -> 77*6+3 = 465
+  //
+  // OJO: la PRIMERA tirada acaba siendo el digito MAS SIGNIFICATIVO.
+  // Cambiar el orden produce una semilla completamente distinta.
+  //
+  let n = 0n;                                    // el 0n es un BigInt, no un Number
+  for (const tirada of tiradas) {
+    if (!Number.isInteger(tirada) || tirada < 1 || tirada > 6) {
+      throw new Error(`tirada fuera del rango 1-6: ${tirada}`);
+    }
+    n = n * SEIS + BigInt(tirada - 1);
+  }
+
+  // ---- PASO 2: recortar a exactamente 128 bits -----------------------------
+  //
+  // N puede llegar hasta 6^50 - 1, que es 2,375 veces mayor que 2^128.
+  //
+  // SOBRE EL SESGO: como 6^50 no es multiplo exacto de 2^128, algunos
+  // resultados salen 3 veces y otros 2. La entropia real baja de 128 a
+  // 127,97 bits. Son 0,03 bits: irrelevante.
+  //
+  // Si lo quieres perfecto, descomenta estas tres lineas. Solo aceptan N por
+  // debajo de 2^129, rango donde 2^128 cabe justo 2 veces y el modulo es
+  // uniforme. Precio: repetir las 50 tiradas el 15,8% de las veces.
+  //
+  // if (n >= (1n << BigInt(BITS_ENTROPIA + 1))) {
+  //   throw new Error('descarta estas tiradas y vuelve a tirar los 50 dados');
+  // }
+
+  n %= DOS_ELEVADO_A_128;
+
+  return bigIntABuffer(n, BITS_ENTROPIA / 8);
+}
+
+/**
+ * Empaqueta un BigInt en un Buffer de tamanyo fijo, byte mas significativo
+ * primero ("big endian"), que es el orden en que leemos los numeros a mano.
+ *
+ * JS no trae un "toBytes" como Python, asi que pasamos por hexadecimal:
+ * toString(16) da la representacion en hex, padStart la rellena con ceros a
+ * la izquierda hasta la longitud exacta (16 bytes = 32 digitos hex).
+ */
+function bigIntABuffer(n, nBytes) {
+  const hex = n.toString(16).padStart(nBytes * 2, '0');
+  return Buffer.from(hex, 'hex');
+}
+
+
+// ============================================================================
+//  PASO 3 - el checksum
+// ============================================================================
+
+/** Devuelve los 4 bits de checksum como un Number de 0 a 15. */
+function calcularChecksum(entropia) {
+  // Los 4 bits mas altos del PRIMER BYTE del SHA-256 de la entropia.
+  //
+  //     SHA-256(entropia) = 05 fd a8 7a ...
+  //                         ^^
+  //                    primer byte = 0x05 = 00000101
+  //                                         ^^^^
+  //                                    estos 4 son el checksum
+  //
+  // Pasamos por el byte porque ni JS ni casi ningun lenguaje sabe indexar
+  // BITS: la unidad minima direccionable de un Buffer es el byte. Asi que
+  // cogemos el byte y desplazamos.
+  //
+  // Estos bits no dan seguridad. Sirven para que, si copias mal una palabra,
+  // la cartera rechace la frase (15 de cada 16 veces) en vez de abrir en
+  // silencio una cuenta vacia que no es la tuya.
+  const digest = crypto.createHash('sha256').update(entropia).digest();
+  return digest[0] >> (8 - BITS_CHECKSUM);
+}
+
+
+// ============================================================================
+//  PASOS 4 y 5 - de la entropia a las palabras
+// ============================================================================
+
+/** Convierte 16 bytes de entropia en los 12 indices de la lista (0-2047). */
+function entropiaAIndices(entropia) {
+  if (entropia.length !== BITS_ENTROPIA / 8) {
+    throw new Error(`la entropia debe ocupar ${BITS_ENTROPIA / 8} bytes, recibidos ${entropia.length}`);
+  }
+
+  // ---- Juntar entropia y checksum en un solo numero de 132 bits ------------
+  //
+  //     [ ---------- 128 bits de entropia ---------- ][chk]
+  //      \___________________ 132 bits ___________________/
+  //
+  // "<< 4n" corre la entropia 4 posiciones a la izquierda, dejando 4 ceros al
+  // final. El "|" (OR bit a bit) rellena justo esos 4 huecos con el checksum.
+  let v = bufferABigInt(entropia) << BigInt(BITS_CHECKSUM);
+  v |= BigInt(calcularChecksum(entropia));
+
+  // ---- PASO 4: escribir esos 132 bits como un numero en base 2048 ----------
+  //
+  // Esto es EXACTAMENTE la operacion inversa del paso 1. Alli leiamos digitos
+  // en base 6 y construiamos un numero; aqui cogemos un numero y extraemos
+  // sus digitos en base 2048. Cada "digito" es un indice de palabra.
+  //
+  //   v = 1746·2048^11 + 1100·2048^10 + ... + 723·2048^1 + 896·2048^0
+  //        \____/                                            \___/
+  //      1ª palabra                                     12ª palabra
+  //
+  // JS no tiene divmod, asi que hacemos las dos operaciones por separado:
+  // "%" da el resto (los 11 bits bajos, el digito de menor peso) y "/" el
+  // cociente. OJO: entre BigInts, "/" es division ENTERA, no decimal.
+  //
+  // Como los digitos salen del reves, cada uno se mete al PRINCIPIO con
+  // unshift().
+  //
+  const indices = [];
+  for (let i = 0; i < N_PALABRAS; i++) {
+    const resto = v % BASE_2048;
+    v = v / BASE_2048;
+    indices.unshift(Number(resto));            // cabe de sobra en un Number
+  }
+
+  // Tras 12 divisiones no debe quedar nada: 12 x 11 = 132 bits, justos.
+  if (v !== 0n) throw new Error('quedaron bits sin repartir: revisa las constantes');
+
+  return indices;
+}
+
+/**
+ * Convierte un Buffer en BigInt. Igual que antes, pasamos por hexadecimal:
+ * el prefijo "0x" le dice al constructor BigInt que interprete base 16.
+ */
+function bufferABigInt(buf) {
+  return BigInt('0x' + buf.toString('hex'));
+}
+
+/** Convierte 16 bytes de entropia en las 12 palabras BIP39. */
+function entropiaAPalabras(entropia) {
+  // ---- PASO 5: cada indice es una posicion directa en la lista -------------
+  return entropiaAIndices(entropia).map(i => PALABRAS[i]);
+}
+
+
+// ============================================================================
+//  ENTRADA - leer las tiradas del usuario
+// ============================================================================
+
+/** Lee 50 tiradas por teclado (o por stdin, si se canaliza). */
+function leerTiradas() {
+  return new Promise((resolve, reject) => {
+    console.log(`Introduce ${N_TIRADAS} tiradas de un dado de 6 caras.`);
+    console.log('Puedes escribirlas de una en una o varias juntas (ej: 3 1 6 4 2).');
+    console.log('Ctrl-C para abortar.\n');
+
+    const tiradas = [];
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const prompt = () => {
+      rl.setPrompt(`[${String(tiradas.length).padStart(2)}/${N_TIRADAS}] > `);
+      rl.prompt();
+    };
+
+    rl.on('line', (linea) => {
+      for (const caracter of linea) {
+        if ('123456'.includes(caracter)) {
+          tiradas.push(Number(caracter));
+          if (tiradas.length === N_TIRADAS) break;
+        } else if (!/\s/.test(caracter) && !',;-.'.includes(caracter)) {
+          // Avisamos en vez de callar: un '7' o una 'o' suele ser un error de
+          // tecleo que cambiaria la semilla sin que te enteres.
+          console.log(`  aviso: ignorado el caracter '${caracter}'`);
+        }
+      }
+      if (tiradas.length >= N_TIRADAS) rl.close(); else prompt();
+    });
+
+    rl.on('close', () => {
+      if (tiradas.length !== N_TIRADAS) {
+        reject(new Error(`solo se leyeron ${tiradas.length} tiradas de ${N_TIRADAS}. Abortado.`));
+      } else {
+        resolve(tiradas);
+      }
+    });
+
+    prompt();
+  });
+}
+
+
+// ============================================================================
+//  SALIDA
+// ============================================================================
+
+function mostrarResultado(tiradas, entropia, palabras) {
+  console.log('\n' + '='.repeat(52));
+  console.log('Tiradas  : ' + tiradas.join(''));
+  console.log('Entropia : ' + entropia.toString('hex'));
+  console.log('='.repeat(52));
+  palabras.forEach((palabra, i) => {
+    console.log(`${String(i + 1).padStart(2)}. ${palabra}`);
+  });
+  console.log('='.repeat(52));
+  console.log('Apuntalas en papel, en este orden. Nunca en un fichero ni en una foto.');
+  console.log("Cuando termines: 'clear' o 'reset' para limpiar la pantalla.");
+}
+
+/** Imprime todos los valores intermedios. Solo para aprender y enseñar. */
+function mostrarDetalle(tiradas, entropia) {
+  // Rehacemos el paso 1 aqui para poder enseñar N, que la funcion principal no
+  // devuelve. Mantener limpias las funciones de calculo y separar la pedagogia
+  // es mejor que llenarlas de console.log.
+  let n = 0n;
+  for (const t of tiradas) n = n * SEIS + BigInt(t - 1);
+
+  const checksum = calcularChecksum(entropia);
+  const indices = entropiaAIndices(entropia);
+  const bitsEntropia = bufferABigInt(entropia).toString(2).padStart(BITS_ENTROPIA, '0');
+  const bitsChecksum = checksum.toString(2).padStart(BITS_CHECKSUM, '0');
+  const bitsTotales = bitsEntropia + bitsChecksum;
+  const digest = crypto.createHash('sha256').update(entropia).digest();
+
+  const raya = '-'.repeat(52);
+
+  console.log('\n' + raya);
+  console.log('PASO 1 - las tiradas como numero en base 6');
+  console.log(raya);
+  console.log('  digitos (tirada - 1): ' + tiradas.map(t => t - 1).join(''));
+  console.log('  N  = ' + n.toString());
+  console.log('  N ocupa ' + n.toString(2).length + ' bits');
+
+  console.log('\n' + raya);
+  console.log(`PASO 2 - recorte a ${BITS_ENTROPIA} bits`);
+  console.log(raya);
+  console.log(`  2^${BITS_ENTROPIA} = ${DOS_ELEVADO_A_128.toString()}`);
+  console.log(n < DOS_ELEVADO_A_128
+    ? `  N ya era menor que 2^${BITS_ENTROPIA}: el modulo no cambia nada`
+    : `  N era mayor: se le resta 2^${BITS_ENTROPIA}`);
+  console.log('  entropia (hex) = ' + entropia.toString('hex'));
+  console.log('  entropia (bin) = ' + bitsEntropia);
+
+  console.log('\n' + raya);
+  console.log('PASO 3 - checksum');
+  console.log(raya);
+  console.log('  SHA-256(entropia) = ' + digest.toString('hex').slice(0, 16) + '...');
+  console.log(`  primer byte = 0x${digest[0].toString(16).padStart(2, '0')} = ${digest[0].toString(2).padStart(8, '0')}`);
+  console.log(`  sus ${BITS_CHECKSUM} bits altos = ${bitsChecksum}   <- checksum`);
+
+  console.log('\n' + raya);
+  console.log(`PASOS 4 y 5 - ${BITS_ENTROPIA + BITS_CHECKSUM} bits en grupos de ${BITS_POR_PALABRA}`);
+  console.log(raya);
+  console.log('  ' + bitsEntropia + '|' + bitsChecksum);
+  indices.forEach((indice, pos) => {
+    const grupo = bitsTotales.slice(pos * BITS_POR_PALABRA, (pos + 1) * BITS_POR_PALABRA);
+    console.log(`  ${String(pos + 1).padStart(2)}. ${grupo} = ${String(indice).padStart(4)} -> ${PALABRAS[indice]}`);
+  });
+  console.log(`\n  Los ultimos ${BITS_CHECKSUM} bits del grupo ${N_PALABRAS} son el checksum de arriba.`);
+}
+
+
+// ============================================================================
+//  AUTOCOMPROBACION
+// ============================================================================
+
+function autotest() {
+  const iguales = (a, b) => a === b;
+  const comprobar = (condicion, mensaje) => {
+    if (!condicion) throw new Error('FALLO: ' + mensaje);
+  };
+
+  // La lista incrustada debe ser byte a byte la oficial. Si alguien cambiara
+  // una sola letra, este hash no cuadraria.
+  comprobar(PALABRAS.length === PALABRAS_EN_LISTA, 'la lista debe tener 2048 palabras');
+  const hashLista = crypto.createHash('sha256')
+    .update(PALABRAS.join('\n') + '\n').digest('hex');
+  comprobar(hashLista === '2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda',
+    'la lista de palabras NO coincide con la oficial de BIP-39');
+
+  // Vectores de la especificacion (github.com/trezor/python-mnemonic).
+  const vectores = [
+    ['00000000000000000000000000000000',
+      'abandon abandon abandon abandon abandon abandon ' +
+      'abandon abandon abandon abandon abandon about'],
+    ['7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f',
+      'legal winner thank year wave sausage worth useful ' +
+      'legal winner thank yellow'],
+    ['80808080808080808080808080808080',
+      'letter advice cage absurd amount doctor acoustic avoid ' +
+      'letter advice cage above'],
+    ['ffffffffffffffffffffffffffffffff',
+      'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong'],
+    ['9e885d952ad362caeb4efe34a8e91bd2',
+      'ozone drill grab fiber curtain grace pudding thank ' +
+      'cruise elder eight picnic'],
+  ];
+  for (const [hex, esperado] of vectores) {
+    const obtenido = entropiaAPalabras(Buffer.from(hex, 'hex')).join(' ');
+    comprobar(iguales(obtenido, esperado), `vector ${hex}:\n  ${obtenido}`);
+  }
+
+  // 50 unos -> todos los digitos a 0 -> N = 0 -> entropia toda a cero
+  comprobar(tiradasAEntropia(Array(50).fill(1)).toString('hex') === '0'.repeat(32),
+    '50 unos deberian dar entropia cero');
+  // 50 seises -> N = 6^50 - 1, contrastado con el calculo directo
+  comprobar(tiradasAEntropia(Array(50).fill(6)).toString('hex') ===
+    bigIntABuffer((6n ** 50n - 1n) % DOS_ELEVADO_A_128, 16).toString('hex'),
+    '50 seises no cuadran con 6^50-1 mod 2^128');
+  // El orden importa: la primera tirada pesa 6^49, la ultima 6^0
+  comprobar(tiradasAEntropia([2, ...Array(49).fill(1)]).toString('hex') !==
+    tiradasAEntropia([...Array(49).fill(1), 2]).toString('hex'),
+    'el orden de las tiradas deberia importar');
+  // Las constantes tienen que encajar sin bits sobrantes
+  comprobar(N_PALABRAS * BITS_POR_PALABRA === BITS_ENTROPIA + BITS_CHECKSUM,
+    'las constantes no encajan');
+  comprobar(2 ** BITS_POR_PALABRA === PALABRAS_EN_LISTA, '2^11 deberia ser 2048');
+
+  console.log(`OK: ${vectores.length} vectores oficiales y 5 comprobaciones propias superados.`);
+}
+
+
+// ============================================================================
+//  PROGRAMA PRINCIPAL
+// ============================================================================
+
+async function main() {
+  if (process.argv.includes('--test')) {
+    autotest();
+    return;
+  }
+
+  const tiradas = await leerTiradas();
+  const entropia = tiradasAEntropia(tiradas);          // pasos 1 y 2
+  const palabras = entropiaAPalabras(entropia);        // pasos 3, 4 y 5
+
+  if (process.argv.includes('--detalle')) mostrarDetalle(tiradas, entropia);
+  mostrarResultado(tiradas, entropia, palabras);
+}
+
+
+
+// ============================================================================
+//  LA LISTA OFICIAL - 2048 palabras del BIP-39 en ingles
+// ============================================================================
+//
+//  Dos propiedades la hacen especial:
+//    - Son 2048 = 2^11 exactas, para que cada palabra valga 11 bits limpios.
+//    - Las 4 PRIMERAS LETRAS son unicas (aban/abil/able...). Puedes apuntar
+//      solo 4 letras por palabra sin perder informacion, util al grabar la
+//      semilla en metal.
+//
+//  El orden es alfabetico y NO se puede alterar: la posicion ES el dato.
+//
+const PALABRAS = [
+  'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract',
+  'absurd', 'abuse', 'access', 'accident', 'account', 'accuse', 'achieve', 'acid',
+  'acoustic', 'acquire', 'across', 'act', 'action', 'actor', 'actress', 'actual',
+  'adapt', 'add', 'addict', 'address', 'adjust', 'admit', 'adult', 'advance',
+  'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'age', 'agent',
+  'agree', 'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album',
+  'alcohol', 'alert', 'alien', 'all', 'alley', 'allow', 'almost', 'alone',
+  'alpha', 'already', 'also', 'alter', 'always', 'amateur', 'amazing', 'among',
+  'amount', 'amused', 'analyst', 'anchor', 'ancient', 'anger', 'angle', 'angry',
+  'animal', 'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique',
+  'anxiety', 'any', 'apart', 'apology', 'appear', 'apple', 'approve', 'april',
+  'arch', 'arctic', 'area', 'arena', 'argue', 'arm', 'armed', 'armor',
+  'army', 'around', 'arrange', 'arrest', 'arrive', 'arrow', 'art', 'artefact',
+  'artist', 'artwork', 'ask', 'aspect', 'assault', 'asset', 'assist', 'assume',
+  'asthma', 'athlete', 'atom', 'attack', 'attend', 'attitude', 'attract', 'auction',
+  'audit', 'august', 'aunt', 'author', 'auto', 'autumn', 'average', 'avocado',
+  'avoid', 'awake', 'aware', 'away', 'awesome', 'awful', 'awkward', 'axis',
+  'baby', 'bachelor', 'bacon', 'badge', 'bag', 'balance', 'balcony', 'ball',
+  'bamboo', 'banana', 'banner', 'bar', 'barely', 'bargain', 'barrel', 'base',
+  'basic', 'basket', 'battle', 'beach', 'bean', 'beauty', 'because', 'become',
+  'beef', 'before', 'begin', 'behave', 'behind', 'believe', 'below', 'belt',
+  'bench', 'benefit', 'best', 'betray', 'better', 'between', 'beyond', 'bicycle',
+  'bid', 'bike', 'bind', 'biology', 'bird', 'birth', 'bitter', 'black',
+  'blade', 'blame', 'blanket', 'blast', 'bleak', 'bless', 'blind', 'blood',
+  'blossom', 'blouse', 'blue', 'blur', 'blush', 'board', 'boat', 'body',
+  'boil', 'bomb', 'bone', 'bonus', 'book', 'boost', 'border', 'boring',
+  'borrow', 'boss', 'bottom', 'bounce', 'box', 'boy', 'bracket', 'brain',
+  'brand', 'brass', 'brave', 'bread', 'breeze', 'brick', 'bridge', 'brief',
+  'bright', 'bring', 'brisk', 'broccoli', 'broken', 'bronze', 'broom', 'brother',
+  'brown', 'brush', 'bubble', 'buddy', 'budget', 'buffalo', 'build', 'bulb',
+  'bulk', 'bullet', 'bundle', 'bunker', 'burden', 'burger', 'burst', 'bus',
+  'business', 'busy', 'butter', 'buyer', 'buzz', 'cabbage', 'cabin', 'cable',
+  'cactus', 'cage', 'cake', 'call', 'calm', 'camera', 'camp', 'can',
+  'canal', 'cancel', 'candy', 'cannon', 'canoe', 'canvas', 'canyon', 'capable',
+  'capital', 'captain', 'car', 'carbon', 'card', 'cargo', 'carpet', 'carry',
+  'cart', 'case', 'cash', 'casino', 'castle', 'casual', 'cat', 'catalog',
+  'catch', 'category', 'cattle', 'caught', 'cause', 'caution', 'cave', 'ceiling',
+  'celery', 'cement', 'census', 'century', 'cereal', 'certain', 'chair', 'chalk',
+  'champion', 'change', 'chaos', 'chapter', 'charge', 'chase', 'chat', 'cheap',
+  'check', 'cheese', 'chef', 'cherry', 'chest', 'chicken', 'chief', 'child',
+  'chimney', 'choice', 'choose', 'chronic', 'chuckle', 'chunk', 'churn', 'cigar',
+  'cinnamon', 'circle', 'citizen', 'city', 'civil', 'claim', 'clap', 'clarify',
+  'claw', 'clay', 'clean', 'clerk', 'clever', 'click', 'client', 'cliff',
+  'climb', 'clinic', 'clip', 'clock', 'clog', 'close', 'cloth', 'cloud',
+  'clown', 'club', 'clump', 'cluster', 'clutch', 'coach', 'coast', 'coconut',
+  'code', 'coffee', 'coil', 'coin', 'collect', 'color', 'column', 'combine',
+  'come', 'comfort', 'comic', 'common', 'company', 'concert', 'conduct', 'confirm',
+  'congress', 'connect', 'consider', 'control', 'convince', 'cook', 'cool', 'copper',
+  'copy', 'coral', 'core', 'corn', 'correct', 'cost', 'cotton', 'couch',
+  'country', 'couple', 'course', 'cousin', 'cover', 'coyote', 'crack', 'cradle',
+  'craft', 'cram', 'crane', 'crash', 'crater', 'crawl', 'crazy', 'cream',
+  'credit', 'creek', 'crew', 'cricket', 'crime', 'crisp', 'critic', 'crop',
+  'cross', 'crouch', 'crowd', 'crucial', 'cruel', 'cruise', 'crumble', 'crunch',
+  'crush', 'cry', 'crystal', 'cube', 'culture', 'cup', 'cupboard', 'curious',
+  'current', 'curtain', 'curve', 'cushion', 'custom', 'cute', 'cycle', 'dad',
+  'damage', 'damp', 'dance', 'danger', 'daring', 'dash', 'daughter', 'dawn',
+  'day', 'deal', 'debate', 'debris', 'decade', 'december', 'decide', 'decline',
+  'decorate', 'decrease', 'deer', 'defense', 'define', 'defy', 'degree', 'delay',
+  'deliver', 'demand', 'demise', 'denial', 'dentist', 'deny', 'depart', 'depend',
+  'deposit', 'depth', 'deputy', 'derive', 'describe', 'desert', 'design', 'desk',
+  'despair', 'destroy', 'detail', 'detect', 'develop', 'device', 'devote', 'diagram',
+  'dial', 'diamond', 'diary', 'dice', 'diesel', 'diet', 'differ', 'digital',
+  'dignity', 'dilemma', 'dinner', 'dinosaur', 'direct', 'dirt', 'disagree', 'discover',
+  'disease', 'dish', 'dismiss', 'disorder', 'display', 'distance', 'divert', 'divide',
+  'divorce', 'dizzy', 'doctor', 'document', 'dog', 'doll', 'dolphin', 'domain',
+  'donate', 'donkey', 'donor', 'door', 'dose', 'double', 'dove', 'draft',
+  'dragon', 'drama', 'drastic', 'draw', 'dream', 'dress', 'drift', 'drill',
+  'drink', 'drip', 'drive', 'drop', 'drum', 'dry', 'duck', 'dumb',
+  'dune', 'during', 'dust', 'dutch', 'duty', 'dwarf', 'dynamic', 'eager',
+  'eagle', 'early', 'earn', 'earth', 'easily', 'east', 'easy', 'echo',
+  'ecology', 'economy', 'edge', 'edit', 'educate', 'effort', 'egg', 'eight',
+  'either', 'elbow', 'elder', 'electric', 'elegant', 'element', 'elephant', 'elevator',
+  'elite', 'else', 'embark', 'embody', 'embrace', 'emerge', 'emotion', 'employ',
+  'empower', 'empty', 'enable', 'enact', 'end', 'endless', 'endorse', 'enemy',
+  'energy', 'enforce', 'engage', 'engine', 'enhance', 'enjoy', 'enlist', 'enough',
+  'enrich', 'enroll', 'ensure', 'enter', 'entire', 'entry', 'envelope', 'episode',
+  'equal', 'equip', 'era', 'erase', 'erode', 'erosion', 'error', 'erupt',
+  'escape', 'essay', 'essence', 'estate', 'eternal', 'ethics', 'evidence', 'evil',
+  'evoke', 'evolve', 'exact', 'example', 'excess', 'exchange', 'excite', 'exclude',
+  'excuse', 'execute', 'exercise', 'exhaust', 'exhibit', 'exile', 'exist', 'exit',
+  'exotic', 'expand', 'expect', 'expire', 'explain', 'expose', 'express', 'extend',
+  'extra', 'eye', 'eyebrow', 'fabric', 'face', 'faculty', 'fade', 'faint',
+  'faith', 'fall', 'false', 'fame', 'family', 'famous', 'fan', 'fancy',
+  'fantasy', 'farm', 'fashion', 'fat', 'fatal', 'father', 'fatigue', 'fault',
+  'favorite', 'feature', 'february', 'federal', 'fee', 'feed', 'feel', 'female',
+  'fence', 'festival', 'fetch', 'fever', 'few', 'fiber', 'fiction', 'field',
+  'figure', 'file', 'film', 'filter', 'final', 'find', 'fine', 'finger',
+  'finish', 'fire', 'firm', 'first', 'fiscal', 'fish', 'fit', 'fitness',
+  'fix', 'flag', 'flame', 'flash', 'flat', 'flavor', 'flee', 'flight',
+  'flip', 'float', 'flock', 'floor', 'flower', 'fluid', 'flush', 'fly',
+  'foam', 'focus', 'fog', 'foil', 'fold', 'follow', 'food', 'foot',
+  'force', 'forest', 'forget', 'fork', 'fortune', 'forum', 'forward', 'fossil',
+  'foster', 'found', 'fox', 'fragile', 'frame', 'frequent', 'fresh', 'friend',
+  'fringe', 'frog', 'front', 'frost', 'frown', 'frozen', 'fruit', 'fuel',
+  'fun', 'funny', 'furnace', 'fury', 'future', 'gadget', 'gain', 'galaxy',
+  'gallery', 'game', 'gap', 'garage', 'garbage', 'garden', 'garlic', 'garment',
+  'gas', 'gasp', 'gate', 'gather', 'gauge', 'gaze', 'general', 'genius',
+  'genre', 'gentle', 'genuine', 'gesture', 'ghost', 'giant', 'gift', 'giggle',
+  'ginger', 'giraffe', 'girl', 'give', 'glad', 'glance', 'glare', 'glass',
+  'glide', 'glimpse', 'globe', 'gloom', 'glory', 'glove', 'glow', 'glue',
+  'goat', 'goddess', 'gold', 'good', 'goose', 'gorilla', 'gospel', 'gossip',
+  'govern', 'gown', 'grab', 'grace', 'grain', 'grant', 'grape', 'grass',
+  'gravity', 'great', 'green', 'grid', 'grief', 'grit', 'grocery', 'group',
+  'grow', 'grunt', 'guard', 'guess', 'guide', 'guilt', 'guitar', 'gun',
+  'gym', 'habit', 'hair', 'half', 'hammer', 'hamster', 'hand', 'happy',
+  'harbor', 'hard', 'harsh', 'harvest', 'hat', 'have', 'hawk', 'hazard',
+  'head', 'health', 'heart', 'heavy', 'hedgehog', 'height', 'hello', 'helmet',
+  'help', 'hen', 'hero', 'hidden', 'high', 'hill', 'hint', 'hip',
+  'hire', 'history', 'hobby', 'hockey', 'hold', 'hole', 'holiday', 'hollow',
+  'home', 'honey', 'hood', 'hope', 'horn', 'horror', 'horse', 'hospital',
+  'host', 'hotel', 'hour', 'hover', 'hub', 'huge', 'human', 'humble',
+  'humor', 'hundred', 'hungry', 'hunt', 'hurdle', 'hurry', 'hurt', 'husband',
+  'hybrid', 'ice', 'icon', 'idea', 'identify', 'idle', 'ignore', 'ill',
+  'illegal', 'illness', 'image', 'imitate', 'immense', 'immune', 'impact', 'impose',
+  'improve', 'impulse', 'inch', 'include', 'income', 'increase', 'index', 'indicate',
+  'indoor', 'industry', 'infant', 'inflict', 'inform', 'inhale', 'inherit', 'initial',
+  'inject', 'injury', 'inmate', 'inner', 'innocent', 'input', 'inquiry', 'insane',
+  'insect', 'inside', 'inspire', 'install', 'intact', 'interest', 'into', 'invest',
+  'invite', 'involve', 'iron', 'island', 'isolate', 'issue', 'item', 'ivory',
+  'jacket', 'jaguar', 'jar', 'jazz', 'jealous', 'jeans', 'jelly', 'jewel',
+  'job', 'join', 'joke', 'journey', 'joy', 'judge', 'juice', 'jump',
+  'jungle', 'junior', 'junk', 'just', 'kangaroo', 'keen', 'keep', 'ketchup',
+  'key', 'kick', 'kid', 'kidney', 'kind', 'kingdom', 'kiss', 'kit',
+  'kitchen', 'kite', 'kitten', 'kiwi', 'knee', 'knife', 'knock', 'know',
+  'lab', 'label', 'labor', 'ladder', 'lady', 'lake', 'lamp', 'language',
+  'laptop', 'large', 'later', 'latin', 'laugh', 'laundry', 'lava', 'law',
+  'lawn', 'lawsuit', 'layer', 'lazy', 'leader', 'leaf', 'learn', 'leave',
+  'lecture', 'left', 'leg', 'legal', 'legend', 'leisure', 'lemon', 'lend',
+  'length', 'lens', 'leopard', 'lesson', 'letter', 'level', 'liar', 'liberty',
+  'library', 'license', 'life', 'lift', 'light', 'like', 'limb', 'limit',
+  'link', 'lion', 'liquid', 'list', 'little', 'live', 'lizard', 'load',
+  'loan', 'lobster', 'local', 'lock', 'logic', 'lonely', 'long', 'loop',
+  'lottery', 'loud', 'lounge', 'love', 'loyal', 'lucky', 'luggage', 'lumber',
+  'lunar', 'lunch', 'luxury', 'lyrics', 'machine', 'mad', 'magic', 'magnet',
+  'maid', 'mail', 'main', 'major', 'make', 'mammal', 'man', 'manage',
+  'mandate', 'mango', 'mansion', 'manual', 'maple', 'marble', 'march', 'margin',
+  'marine', 'market', 'marriage', 'mask', 'mass', 'master', 'match', 'material',
+  'math', 'matrix', 'matter', 'maximum', 'maze', 'meadow', 'mean', 'measure',
+  'meat', 'mechanic', 'medal', 'media', 'melody', 'melt', 'member', 'memory',
+  'mention', 'menu', 'mercy', 'merge', 'merit', 'merry', 'mesh', 'message',
+  'metal', 'method', 'middle', 'midnight', 'milk', 'million', 'mimic', 'mind',
+  'minimum', 'minor', 'minute', 'miracle', 'mirror', 'misery', 'miss', 'mistake',
+  'mix', 'mixed', 'mixture', 'mobile', 'model', 'modify', 'mom', 'moment',
+  'monitor', 'monkey', 'monster', 'month', 'moon', 'moral', 'more', 'morning',
+  'mosquito', 'mother', 'motion', 'motor', 'mountain', 'mouse', 'move', 'movie',
+  'much', 'muffin', 'mule', 'multiply', 'muscle', 'museum', 'mushroom', 'music',
+  'must', 'mutual', 'myself', 'mystery', 'myth', 'naive', 'name', 'napkin',
+  'narrow', 'nasty', 'nation', 'nature', 'near', 'neck', 'need', 'negative',
+  'neglect', 'neither', 'nephew', 'nerve', 'nest', 'net', 'network', 'neutral',
+  'never', 'news', 'next', 'nice', 'night', 'noble', 'noise', 'nominee',
+  'noodle', 'normal', 'north', 'nose', 'notable', 'note', 'nothing', 'notice',
+  'novel', 'now', 'nuclear', 'number', 'nurse', 'nut', 'oak', 'obey',
+  'object', 'oblige', 'obscure', 'observe', 'obtain', 'obvious', 'occur', 'ocean',
+  'october', 'odor', 'off', 'offer', 'office', 'often', 'oil', 'okay',
+  'old', 'olive', 'olympic', 'omit', 'once', 'one', 'onion', 'online',
+  'only', 'open', 'opera', 'opinion', 'oppose', 'option', 'orange', 'orbit',
+  'orchard', 'order', 'ordinary', 'organ', 'orient', 'original', 'orphan', 'ostrich',
+  'other', 'outdoor', 'outer', 'output', 'outside', 'oval', 'oven', 'over',
+  'own', 'owner', 'oxygen', 'oyster', 'ozone', 'pact', 'paddle', 'page',
+  'pair', 'palace', 'palm', 'panda', 'panel', 'panic', 'panther', 'paper',
+  'parade', 'parent', 'park', 'parrot', 'party', 'pass', 'patch', 'path',
+  'patient', 'patrol', 'pattern', 'pause', 'pave', 'payment', 'peace', 'peanut',
+  'pear', 'peasant', 'pelican', 'pen', 'penalty', 'pencil', 'people', 'pepper',
+  'perfect', 'permit', 'person', 'pet', 'phone', 'photo', 'phrase', 'physical',
+  'piano', 'picnic', 'picture', 'piece', 'pig', 'pigeon', 'pill', 'pilot',
+  'pink', 'pioneer', 'pipe', 'pistol', 'pitch', 'pizza', 'place', 'planet',
+  'plastic', 'plate', 'play', 'please', 'pledge', 'pluck', 'plug', 'plunge',
+  'poem', 'poet', 'point', 'polar', 'pole', 'police', 'pond', 'pony',
+  'pool', 'popular', 'portion', 'position', 'possible', 'post', 'potato', 'pottery',
+  'poverty', 'powder', 'power', 'practice', 'praise', 'predict', 'prefer', 'prepare',
+  'present', 'pretty', 'prevent', 'price', 'pride', 'primary', 'print', 'priority',
+  'prison', 'private', 'prize', 'problem', 'process', 'produce', 'profit', 'program',
+  'project', 'promote', 'proof', 'property', 'prosper', 'protect', 'proud', 'provide',
+  'public', 'pudding', 'pull', 'pulp', 'pulse', 'pumpkin', 'punch', 'pupil',
+  'puppy', 'purchase', 'purity', 'purpose', 'purse', 'push', 'put', 'puzzle',
+  'pyramid', 'quality', 'quantum', 'quarter', 'question', 'quick', 'quit', 'quiz',
+  'quote', 'rabbit', 'raccoon', 'race', 'rack', 'radar', 'radio', 'rail',
+  'rain', 'raise', 'rally', 'ramp', 'ranch', 'random', 'range', 'rapid',
+  'rare', 'rate', 'rather', 'raven', 'raw', 'razor', 'ready', 'real',
+  'reason', 'rebel', 'rebuild', 'recall', 'receive', 'recipe', 'record', 'recycle',
+  'reduce', 'reflect', 'reform', 'refuse', 'region', 'regret', 'regular', 'reject',
+  'relax', 'release', 'relief', 'rely', 'remain', 'remember', 'remind', 'remove',
+  'render', 'renew', 'rent', 'reopen', 'repair', 'repeat', 'replace', 'report',
+  'require', 'rescue', 'resemble', 'resist', 'resource', 'response', 'result', 'retire',
+  'retreat', 'return', 'reunion', 'reveal', 'review', 'reward', 'rhythm', 'rib',
+  'ribbon', 'rice', 'rich', 'ride', 'ridge', 'rifle', 'right', 'rigid',
+  'ring', 'riot', 'ripple', 'risk', 'ritual', 'rival', 'river', 'road',
+  'roast', 'robot', 'robust', 'rocket', 'romance', 'roof', 'rookie', 'room',
+  'rose', 'rotate', 'rough', 'round', 'route', 'royal', 'rubber', 'rude',
+  'rug', 'rule', 'run', 'runway', 'rural', 'sad', 'saddle', 'sadness',
+  'safe', 'sail', 'salad', 'salmon', 'salon', 'salt', 'salute', 'same',
+  'sample', 'sand', 'satisfy', 'satoshi', 'sauce', 'sausage', 'save', 'say',
+  'scale', 'scan', 'scare', 'scatter', 'scene', 'scheme', 'school', 'science',
+  'scissors', 'scorpion', 'scout', 'scrap', 'screen', 'script', 'scrub', 'sea',
+  'search', 'season', 'seat', 'second', 'secret', 'section', 'security', 'seed',
+  'seek', 'segment', 'select', 'sell', 'seminar', 'senior', 'sense', 'sentence',
+  'series', 'service', 'session', 'settle', 'setup', 'seven', 'shadow', 'shaft',
+  'shallow', 'share', 'shed', 'shell', 'sheriff', 'shield', 'shift', 'shine',
+  'ship', 'shiver', 'shock', 'shoe', 'shoot', 'shop', 'short', 'shoulder',
+  'shove', 'shrimp', 'shrug', 'shuffle', 'shy', 'sibling', 'sick', 'side',
+  'siege', 'sight', 'sign', 'silent', 'silk', 'silly', 'silver', 'similar',
+  'simple', 'since', 'sing', 'siren', 'sister', 'situate', 'six', 'size',
+  'skate', 'sketch', 'ski', 'skill', 'skin', 'skirt', 'skull', 'slab',
+  'slam', 'sleep', 'slender', 'slice', 'slide', 'slight', 'slim', 'slogan',
+  'slot', 'slow', 'slush', 'small', 'smart', 'smile', 'smoke', 'smooth',
+  'snack', 'snake', 'snap', 'sniff', 'snow', 'soap', 'soccer', 'social',
+  'sock', 'soda', 'soft', 'solar', 'soldier', 'solid', 'solution', 'solve',
+  'someone', 'song', 'soon', 'sorry', 'sort', 'soul', 'sound', 'soup',
+  'source', 'south', 'space', 'spare', 'spatial', 'spawn', 'speak', 'special',
+  'speed', 'spell', 'spend', 'sphere', 'spice', 'spider', 'spike', 'spin',
+  'spirit', 'split', 'spoil', 'sponsor', 'spoon', 'sport', 'spot', 'spray',
+  'spread', 'spring', 'spy', 'square', 'squeeze', 'squirrel', 'stable', 'stadium',
+  'staff', 'stage', 'stairs', 'stamp', 'stand', 'start', 'state', 'stay',
+  'steak', 'steel', 'stem', 'step', 'stereo', 'stick', 'still', 'sting',
+  'stock', 'stomach', 'stone', 'stool', 'story', 'stove', 'strategy', 'street',
+  'strike', 'strong', 'struggle', 'student', 'stuff', 'stumble', 'style', 'subject',
+  'submit', 'subway', 'success', 'such', 'sudden', 'suffer', 'sugar', 'suggest',
+  'suit', 'summer', 'sun', 'sunny', 'sunset', 'super', 'supply', 'supreme',
+  'sure', 'surface', 'surge', 'surprise', 'surround', 'survey', 'suspect', 'sustain',
+  'swallow', 'swamp', 'swap', 'swarm', 'swear', 'sweet', 'swift', 'swim',
+  'swing', 'switch', 'sword', 'symbol', 'symptom', 'syrup', 'system', 'table',
+  'tackle', 'tag', 'tail', 'talent', 'talk', 'tank', 'tape', 'target',
+  'task', 'taste', 'tattoo', 'taxi', 'teach', 'team', 'tell', 'ten',
+  'tenant', 'tennis', 'tent', 'term', 'test', 'text', 'thank', 'that',
+  'theme', 'then', 'theory', 'there', 'they', 'thing', 'this', 'thought',
+  'three', 'thrive', 'throw', 'thumb', 'thunder', 'ticket', 'tide', 'tiger',
+  'tilt', 'timber', 'time', 'tiny', 'tip', 'tired', 'tissue', 'title',
+  'toast', 'tobacco', 'today', 'toddler', 'toe', 'together', 'toilet', 'token',
+  'tomato', 'tomorrow', 'tone', 'tongue', 'tonight', 'tool', 'tooth', 'top',
+  'topic', 'topple', 'torch', 'tornado', 'tortoise', 'toss', 'total', 'tourist',
+  'toward', 'tower', 'town', 'toy', 'track', 'trade', 'traffic', 'tragic',
+  'train', 'transfer', 'trap', 'trash', 'travel', 'tray', 'treat', 'tree',
+  'trend', 'trial', 'tribe', 'trick', 'trigger', 'trim', 'trip', 'trophy',
+  'trouble', 'truck', 'true', 'truly', 'trumpet', 'trust', 'truth', 'try',
+  'tube', 'tuition', 'tumble', 'tuna', 'tunnel', 'turkey', 'turn', 'turtle',
+  'twelve', 'twenty', 'twice', 'twin', 'twist', 'two', 'type', 'typical',
+  'ugly', 'umbrella', 'unable', 'unaware', 'uncle', 'uncover', 'under', 'undo',
+  'unfair', 'unfold', 'unhappy', 'uniform', 'unique', 'unit', 'universe', 'unknown',
+  'unlock', 'until', 'unusual', 'unveil', 'update', 'upgrade', 'uphold', 'upon',
+  'upper', 'upset', 'urban', 'urge', 'usage', 'use', 'used', 'useful',
+  'useless', 'usual', 'utility', 'vacant', 'vacuum', 'vague', 'valid', 'valley',
+  'valve', 'van', 'vanish', 'vapor', 'various', 'vast', 'vault', 'vehicle',
+  'velvet', 'vendor', 'venture', 'venue', 'verb', 'verify', 'version', 'very',
+  'vessel', 'veteran', 'viable', 'vibrant', 'vicious', 'victory', 'video', 'view',
+  'village', 'vintage', 'violin', 'virtual', 'virus', 'visa', 'visit', 'visual',
+  'vital', 'vivid', 'vocal', 'voice', 'void', 'volcano', 'volume', 'vote',
+  'voyage', 'wage', 'wagon', 'wait', 'walk', 'wall', 'walnut', 'want',
+  'warfare', 'warm', 'warrior', 'wash', 'wasp', 'waste', 'water', 'wave',
+  'way', 'wealth', 'weapon', 'wear', 'weasel', 'weather', 'web', 'wedding',
+  'weekend', 'weird', 'welcome', 'west', 'wet', 'whale', 'what', 'wheat',
+  'wheel', 'when', 'where', 'whip', 'whisper', 'wide', 'width', 'wife',
+  'wild', 'will', 'win', 'window', 'wine', 'wing', 'wink', 'winner',
+  'winter', 'wire', 'wisdom', 'wise', 'wish', 'witness', 'wolf', 'woman',
+  'wonder', 'wood', 'wool', 'word', 'work', 'world', 'worry', 'worth',
+  'wrap', 'wreck', 'wrestle', 'wrist', 'write', 'wrong', 'yard', 'year',
+  'yellow', 'you', 'young', 'youth', 'zebra', 'zero', 'zone', 'zoo',
+];
+
+
+main().catch(err => {
+  console.error('\nERROR: ' + err.message);
+  process.exit(1);
+});
+</script>
+<script type="text/plain" id="src-bip39_dados.cs">
+// bip39_dados.cs - 12 palabras BIP39 a partir de 50 tiradas de un dado de 6 caras.
+//
+// COMPILAR Y EJECUTAR:
+//
+//     .NET 6, 7, 8 o 9 (lo habitual hoy):
+//         dotnet new console -o bip39
+//         cp bip39_dados.cs bip39/Program.cs      # sustituye el generado
+//         cd bip39 && dotnet run -- --test
+//       Puede salir el aviso CS8600 en Console.ReadLine(): las plantillas
+//       activan <Nullable>enable</Nullable> y ese metodo devuelve string?.
+//       Es solo un AVISO, compila y funciona. No se usa "string?" aqui para
+//       mantener la compatibilidad con compiladores antiguos.
+//
+//     .NET 10 o superior (permite ficheros sueltos, sin proyecto):
+//         dotnet run bip39_dados.cs --test
+//
+//     Mono (cualquier Unix, sin instalar .NET):
+//         mcs -r:System.Numerics.dll -out:bip39_dados.exe bip39_dados.cs
+//         mono bip39_dados.exe --test
+//       El -r:System.Numerics.dll es obligatorio en Mono; con dotnet no.
+//
+// REQUISITOS MINIMOS:
+//     Este fichero compila con -langversion:6 (C# 6, ano 2015) y solo usa
+//     BigInteger y SHA256, ambos disponibles desde .NET Framework 4.0.
+//     Cualquier .NET de los ultimos diez anyos lo ejecuta sin cambios.
+//
+// USO:
+//     bip39_dados                # pide las tiradas por teclado
+//     bip39_dados --detalle      // ademas, muestra los pasos intermedios
+//     bip39_dados --test         // autocomprobacion con vectores oficiales
+//
+// EL METODO EN CINCO PASOS:
+//
+//     50 tiradas de d6
+//           |  PASO 1: leer las tiradas como un numero en base 6
+//           v
+//     numero entero N  (unos 129,25 bits)
+//           |  PASO 2: quedarse con los 128 bits bajos
+//           v
+//     entropia = 16 bytes = 128 bits
+//           |  PASO 3: checksum = 4 primeros bits de SHA-256(entropia)
+//           v
+//     132 bits = 128 + 4
+//           |  PASO 4: escribir esos 132 bits como un numero en base 2048
+//           v
+//     12 indices (0-2047)
+//           |  PASO 5: buscar cada indice en la lista oficial
+//           v
+//     12 palabras
+//
+//     Los pasos 1 y 4 son la MISMA operacion en sentidos opuestos: una
+//     conversion de base. Primero LEEMOS los dados en base 6, luego ESCRIBIMOS
+//     el resultado en base 2048.
+//
+// NOTA SOBRE C#:
+//     long solo llega a 64 bits y nuestro N tiene 129, asi que usamos
+//     System.Numerics.BigInteger. A diferencia de Java, BigInteger en C# TIENE
+//     SOBRECARGA DE OPERADORES: puedes escribir "n = n * 6 + d" tal cual, sin
+//     llamadas a .Multiply() ni .Add(). Eso hace que el bucle de Horner se lea
+//     casi igual que en Python.
+//
+//     CUIDADO con ToByteArray(): devuelve los bytes en LITTLE ENDIAN y anyade
+//     un byte de signo si el bit mas alto vale 1. Para 2^128-1 devuelve 17
+//     bytes, no 16. Por eso este programa NO lo usa directamente: los helpers
+//     ABytesBigEndian y DeBytesBigEndian de abajo hacen la conversion a mano.
+//     Es la trampa numero uno al portar este algoritmo a C#.
+//
+// SEGURIDAD:
+//     - Ejecutalo en un ordenador SIN RED, idealmente arrancado desde un USB live.
+//     - No pases las tiradas como argumento: quedarian en el historial del shell.
+//     - Apunta las palabras en papel. Borra la pantalla al terminar.
+//     - El modo --detalle es para APRENDER, no para una semilla real.
+//
+// Dependencias: ninguna, solo la biblioteca estandar de .NET.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Security.Cryptography;
+using System.Text;
+
+static class Bip39Dados
+{
+    // ========================================================================
+    //  CONSTANTES - de donde sale cada numero
+    // ========================================================================
+
+    // Un dado de 6 caras aporta log2(6) = 2,585 bits por tirada.
+    // 128 / 2,585 = 49,5 -> redondeando hacia arriba, 50 tiradas.
+    const int N_TIRADAS = 50;
+
+    // BIP39 admite 128, 160, 192, 224 o 256 bits. 128 es el estandar de 12 palabras.
+    const int BITS_ENTROPIA = 128;
+
+    // La especificacion fija: bits de checksum = bits de entropia / 32.
+    const int BITS_CHECKSUM = BITS_ENTROPIA / 32;            // 4
+
+    // La lista oficial tiene 2048 palabras, y 2048 = 2^11.
+    const int PALABRAS_EN_LISTA = 2048;
+    const int BITS_POR_PALABRA = 11;
+
+    // 128 + 4 = 132, y 132 / 11 = 12 exactas. No sobra ni falta un bit.
+    const int N_PALABRAS = (BITS_ENTROPIA + BITS_CHECKSUM) / BITS_POR_PALABRA;   // 12
+
+    const int BYTES_ENTROPIA = BITS_ENTROPIA / 8;            // 16
+
+    // BigInteger.Pow(2, 128). Se calcula una vez al arrancar.
+    static readonly BigInteger DOS_ELEVADO_A_128 = BigInteger.Pow(2, BITS_ENTROPIA);
+
+
+    // ========================================================================
+    //  PASOS 1 y 2 - de las tiradas a la entropia
+    // ========================================================================
+
+    /// <summary>Convierte 50 enteros del 1 al 6 en 16 bytes de entropia.</summary>
+    static byte[] TiradasAEntropia(IList<int> tiradas)
+    {
+        if (tiradas.Count != N_TIRADAS)
+            throw new ArgumentException(
+                $"hacen falta exactamente {N_TIRADAS} tiradas, recibidas {tiradas.Count}");
+
+        // ---- PASO 1: las tiradas son los digitos de un numero en base 6 ----
+        //
+        // El dado no tiene cara 0, asi que restamos 1 para pasar de 1..6 a 0..5.
+        // El numero que formamos es:
+        //
+        //     N = d1*6^49 + d2*6^48 + ... + d49*6^1 + d50*6^0
+        //
+        // pero no calculamos potencias: usamos el METODO DE HORNER, que
+        // multiplica el acumulado por 6 y le suma el digito nuevo.
+        // Con las tiradas 3,1,6,4:
+        //
+        //     n=0 -> 0*6+2 = 2 -> 2*6+0 = 12 -> 12*6+5 = 77 -> 77*6+3 = 465
+        //
+        // OJO: la PRIMERA tirada acaba siendo el digito MAS SIGNIFICATIVO.
+        // Cambiar el orden produce una semilla completamente distinta.
+        //
+        BigInteger n = BigInteger.Zero;
+        foreach (int tirada in tiradas)
+        {
+            if (tirada < 1 || tirada > 6)
+                throw new ArgumentException($"tirada fuera del rango 1-6: {tirada}");
+            n = n * 6 + (tirada - 1);       // sobrecarga de operadores: se lee solo
+        }
+
+        // ---- PASO 2: recortar a exactamente 128 bits -----------------------
+        //
+        // N puede llegar hasta 6^50 - 1, que es 2,375 veces mayor que 2^128.
+        //
+        // SOBRE EL SESGO: como 6^50 no es multiplo exacto de 2^128, algunos
+        // resultados salen 3 veces y otros 2. La entropia real baja de 128 a
+        // 127,97 bits. Son 0,03 bits: irrelevante.
+        //
+        // Si lo quieres perfecto, descomenta estas dos lineas. Solo aceptan N
+        // por debajo de 2^129, rango donde 2^128 cabe justo 2 veces y el modulo
+        // es uniforme. Precio: repetir las 50 tiradas el 15,8% de las veces.
+        //
+        // if (n >= BigInteger.Pow(2, BITS_ENTROPIA + 1))
+        //     throw new ArgumentException("descarta estas tiradas y vuelve a tirar los 50 dados");
+
+        n %= DOS_ELEVADO_A_128;
+
+        return ABytesBigEndian(n, BYTES_ENTROPIA);
+    }
+
+    /// <summary>
+    /// Empaqueta un BigInteger no negativo en un array de tamanyo fijo, byte mas
+    /// significativo primero ("big endian").
+    ///
+    /// NO usamos ToByteArray() porque devuelve LITTLE ENDIAN y anyade un byte de
+    /// signo cuando el bit alto vale 1 (para 2^128-1 devolveria 17 bytes). En
+    /// .NET Core 3.0+ existe ToByteArray(isUnsigned: true, isBigEndian: true),
+    /// pero lo hacemos a mano para que el codigo funcione tambien en Mono y en
+    /// .NET Framework, y sobre todo para que se VEA lo que ocurre.
+    /// </summary>
+    static byte[] ABytesBigEndian(BigInteger n, int nBytes)
+    {
+        if (n.Sign < 0) throw new ArgumentException("solo numeros no negativos");
+        var bytes = new byte[nBytes];
+        for (int i = nBytes - 1; i >= 0; i--)     // se rellena desde el final
+        {
+            bytes[i] = (byte)(n & 0xFF);          // los 8 bits mas bajos
+            n >>= 8;                              // y se descartan
+        }
+        if (!n.IsZero) throw new ArgumentException($"el numero no cabe en {nBytes} bytes");
+        return bytes;
+    }
+
+    /// <summary>
+    /// Convierte bytes big endian en BigInteger. Tampoco usamos el constructor
+    /// new BigInteger(byte[]) porque espera little endian e interpreta el bit
+    /// alto como signo: un array que empiece por 0xFF saldria NEGATIVO.
+    /// </summary>
+    static BigInteger DeBytesBigEndian(byte[] bytes)
+    {
+        BigInteger n = BigInteger.Zero;
+        foreach (byte b in bytes) n = (n << 8) | b;   // Horner, pero en base 256
+        return n;
+    }
+
+
+    // ========================================================================
+    //  PASO 3 - el checksum
+    // ========================================================================
+
+    /// <summary>Devuelve los 4 bits de checksum como un int de 0 a 15.</summary>
+    static int CalcularChecksum(byte[] entropia)
+    {
+        // Los 4 bits mas altos del PRIMER BYTE del SHA-256 de la entropia.
+        //
+        //     SHA-256(entropia) = 05 fd a8 7a ...
+        //                         ^^
+        //                    primer byte = 0x05 = 00000101
+        //                                         ^^^^
+        //                                    estos 4 son el checksum
+        //
+        // Pasamos por el byte porque C#, como casi todos los lenguajes, no sabe
+        // indexar BITS: la unidad minima direccionable de un array es el byte.
+        //
+        // Estos bits no dan seguridad. Sirven para que, si copias mal una
+        // palabra, la cartera rechace la frase (15 de cada 16 veces) en vez de
+        // abrir en silencio una cuenta vacia que no es la tuya.
+        using (var sha = SHA256.Create())
+        {
+            byte[] digest = sha.ComputeHash(entropia);
+            return digest[0] >> (8 - BITS_CHECKSUM);
+        }
+    }
+
+
+    // ========================================================================
+    //  PASOS 4 y 5 - de la entropia a las palabras
+    // ========================================================================
+
+    /// <summary>Convierte 16 bytes de entropia en los 12 indices (0-2047).</summary>
+    static int[] EntropiaAIndices(byte[] entropia)
+    {
+        if (entropia.Length != BYTES_ENTROPIA)
+            throw new ArgumentException(
+                $"la entropia debe ocupar {BYTES_ENTROPIA} bytes, recibidos {entropia.Length}");
+
+        // ---- Juntar entropia y checksum en un solo numero de 132 bits ------
+        //
+        //     [ ---------- 128 bits de entropia ---------- ][chk]
+        //      \___________________ 132 bits ___________________/
+        //
+        // "<< 4" corre la entropia 4 posiciones a la izquierda, dejando 4 ceros
+        // al final. El "|" (OR bit a bit) rellena justo esos huecos.
+        BigInteger v = DeBytesBigEndian(entropia) << BITS_CHECKSUM;
+        v |= CalcularChecksum(entropia);
+
+        // ---- PASO 4: escribir los 132 bits como un numero en base 2048 -----
+        //
+        // Esto es EXACTAMENTE la operacion inversa del paso 1. Alli leiamos
+        // digitos en base 6 y construiamos un numero; aqui cogemos un numero y
+        // extraemos sus digitos en base 2048. Cada "digito" es un indice.
+        //
+        //   v = 1746·2048^11 + 1100·2048^10 + ... + 723·2048^1 + 896·2048^0
+        //        \____/                                            \___/
+        //      1ª palabra                                     12ª palabra
+        //
+        // BigInteger.DivRem da cociente y resto de una sola pasada, igual que
+        // el divmod de Python. El resto son los 11 bits bajos: el digito de
+        // menor peso. Como salen del reves, se rellena el array desde el final.
+        //
+        var indices = new int[N_PALABRAS];
+        for (int i = N_PALABRAS - 1; i >= 0; i--)
+        {
+            BigInteger resto;
+            v = BigInteger.DivRem(v, PALABRAS_EN_LISTA, out resto);
+            indices[i] = (int)resto;
+        }
+
+        // Tras 12 divisiones no debe quedar nada: 12 x 11 = 132 bits, justos.
+        if (!v.IsZero)
+            throw new InvalidOperationException("quedaron bits sin repartir: revisa las constantes");
+
+        return indices;
+    }
+
+    /// <summary>Convierte 16 bytes de entropia en las 12 palabras BIP39.</summary>
+    static string[] EntropiaAPalabras(byte[] entropia)
+    {
+        // ---- PASO 5: cada indice es una posicion directa en la lista -------
+        return EntropiaAIndices(entropia).Select(i => PALABRAS[i]).ToArray();
+    }
+
+
+    // ========================================================================
+    //  ENTRADA - leer las tiradas del usuario
+    // ========================================================================
+
+    static List<int> LeerTiradas()
+    {
+        Console.WriteLine($"Introduce {N_TIRADAS} tiradas de un dado de 6 caras.");
+        Console.WriteLine("Puedes escribirlas de una en una o varias juntas (ej: 3 1 6 4 2).");
+        Console.WriteLine("Ctrl-C para abortar.\n");
+
+        var tiradas = new List<int>();
+        while (tiradas.Count < N_TIRADAS)
+        {
+            Console.Write($"[{tiradas.Count,2}/{N_TIRADAS}] > ");
+            string linea = Console.ReadLine();
+            if (linea == null) break;              // fin de la entrada canalizada
+
+            foreach (char c in linea)
+            {
+                if (c >= '1' && c <= '6')
+                {
+                    tiradas.Add(c - '0');
+                    if (tiradas.Count == N_TIRADAS) break;
+                }
+                else if (!char.IsWhiteSpace(c) && ",;-.".IndexOf(c) < 0)
+                {
+                    // Avisamos en vez de callar: un '7' o una 'o' suele ser un
+                    // error de tecleo que cambiaria la semilla sin que te enteres.
+                    Console.WriteLine($"  aviso: ignorado el caracter '{c}'");
+                }
+            }
+        }
+
+        if (tiradas.Count != N_TIRADAS)
+            throw new InvalidOperationException(
+                $"solo se leyeron {tiradas.Count} tiradas de {N_TIRADAS}. Abortado.");
+        return tiradas;
+    }
+
+
+    // ========================================================================
+    //  SALIDA
+    // ========================================================================
+
+    static string AHex(byte[] bytes)
+    {
+        var sb = new StringBuilder();
+        foreach (byte b in bytes) sb.Append(b.ToString("x2"));
+        return sb.ToString();
+    }
+
+    /// <summary>Representacion binaria de un BigInteger, sin ceros a la izquierda.</summary>
+    static string ABinario(BigInteger n)
+    {
+        if (n.IsZero) return "0";
+        var sb = new StringBuilder();
+        while (!n.IsZero) { sb.Insert(0, (char)('0' + (int)(n & 1))); n >>= 1; }
+        return sb.ToString();
+    }
+
+    static void MostrarResultado(IList<int> tiradas, byte[] entropia, string[] palabras)
+    {
+        string raya = new string('=', 52);
+        Console.WriteLine("\n" + raya);
+        Console.WriteLine("Tiradas  : " + string.Concat(tiradas));
+        Console.WriteLine("Entropia : " + AHex(entropia));
+        Console.WriteLine(raya);
+        for (int i = 0; i < palabras.Length; i++)
+            Console.WriteLine($"{i + 1,2}. {palabras[i]}");
+        Console.WriteLine(raya);
+        Console.WriteLine("Apuntalas en papel, en este orden. Nunca en un fichero ni en una foto.");
+        Console.WriteLine("Cuando termines: limpia la pantalla (clear / cls).");
+    }
+
+    /// <summary>Imprime todos los valores intermedios. Solo para aprender y enseñar.</summary>
+    static void MostrarDetalle(IList<int> tiradas, byte[] entropia)
+    {
+        // Rehacemos el paso 1 aqui para poder enseñar N, que la funcion
+        // principal no devuelve. Mantener limpias las funciones de calculo y
+        // separar la pedagogia es mejor que llenarlas de Console.WriteLine.
+        BigInteger n = BigInteger.Zero;
+        foreach (int t in tiradas) n = n * 6 + (t - 1);
+
+        int checksum = CalcularChecksum(entropia);
+        int[] indices = EntropiaAIndices(entropia);
+        string bitsEntropia = ABinario(DeBytesBigEndian(entropia)).PadLeft(BITS_ENTROPIA, '0');
+        string bitsChecksum = Convert.ToString(checksum, 2).PadLeft(BITS_CHECKSUM, '0');
+        string bitsTotales = bitsEntropia + bitsChecksum;
+
+        byte[] digest;
+        using (var sha = SHA256.Create()) digest = sha.ComputeHash(entropia);
+
+        string raya = new string('-', 52);
+
+        Console.WriteLine("\n" + raya);
+        Console.WriteLine("PASO 1 - las tiradas como numero en base 6");
+        Console.WriteLine(raya);
+        Console.WriteLine("  digitos (tirada - 1): " + string.Concat(tiradas.Select(t => t - 1)));
+        Console.WriteLine("  N  = " + n);
+        Console.WriteLine("  N ocupa " + ABinario(n).Length + " bits");
+
+        Console.WriteLine("\n" + raya);
+        Console.WriteLine($"PASO 2 - recorte a {BITS_ENTROPIA} bits");
+        Console.WriteLine(raya);
+        Console.WriteLine($"  2^{BITS_ENTROPIA} = {DOS_ELEVADO_A_128}");
+        Console.WriteLine(n < DOS_ELEVADO_A_128
+            ? $"  N ya era menor que 2^{BITS_ENTROPIA}: el modulo no cambia nada"
+            : $"  N era mayor: se le resta 2^{BITS_ENTROPIA}");
+        Console.WriteLine("  entropia (hex) = " + AHex(entropia));
+        Console.WriteLine("  entropia (bin) = " + bitsEntropia);
+
+        Console.WriteLine("\n" + raya);
+        Console.WriteLine("PASO 3 - checksum");
+        Console.WriteLine(raya);
+        Console.WriteLine("  SHA-256(entropia) = " + AHex(digest).Substring(0, 16) + "...");
+        Console.WriteLine($"  primer byte = 0x{digest[0]:x2} = {Convert.ToString(digest[0], 2).PadLeft(8, '0')}");
+        Console.WriteLine($"  sus {BITS_CHECKSUM} bits altos = {bitsChecksum}   <- checksum");
+
+        Console.WriteLine("\n" + raya);
+        Console.WriteLine($"PASOS 4 y 5 - {BITS_ENTROPIA + BITS_CHECKSUM} bits en grupos de {BITS_POR_PALABRA}");
+        Console.WriteLine(raya);
+        Console.WriteLine("  " + bitsEntropia + "|" + bitsChecksum);
+        for (int pos = 0; pos < indices.Length; pos++)
+        {
+            string grupo = bitsTotales.Substring(pos * BITS_POR_PALABRA, BITS_POR_PALABRA);
+            Console.WriteLine($"  {pos + 1,2}. {grupo} = {indices[pos],4} -> {PALABRAS[indices[pos]]}");
+        }
+        Console.WriteLine($"\n  Los ultimos {BITS_CHECKSUM} bits del grupo {N_PALABRAS} son el checksum de arriba.");
+    }
+
+
+    // ========================================================================
+    //  AUTOCOMPROBACION
+    // ========================================================================
+
+    static void Comprobar(bool condicion, string mensaje)
+    {
+        // No usamos Debug.Assert: desaparece al compilar en modo Release, igual
+        // que los assert de Python con -O. Una excepcion normal no se puede
+        // desactivar por accidente.
+        if (!condicion) throw new Exception("FALLO: " + mensaje);
+    }
+
+    static void Autotest()
+    {
+        // La lista incrustada debe ser byte a byte la oficial. Si alguien
+        // cambiara una sola letra, este hash no cuadraria.
+        Comprobar(PALABRAS.Length == PALABRAS_EN_LISTA, "la lista debe tener 2048 palabras");
+        byte[] hashLista;
+        using (var sha = SHA256.Create())
+            hashLista = sha.ComputeHash(Encoding.ASCII.GetBytes(string.Join("\n", PALABRAS) + "\n"));
+        Comprobar(AHex(hashLista) == "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda",
+            "la lista de palabras NO coincide con la oficial de BIP-39");
+
+        // Vectores de la especificacion (github.com/trezor/python-mnemonic).
+        var vectores = new[] {
+            new[] { "00000000000000000000000000000000",
+                    "abandon abandon abandon abandon abandon abandon " +
+                    "abandon abandon abandon abandon abandon about" },
+            new[] { "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+                    "legal winner thank year wave sausage worth useful " +
+                    "legal winner thank yellow" },
+            new[] { "80808080808080808080808080808080",
+                    "letter advice cage absurd amount doctor acoustic avoid " +
+                    "letter advice cage above" },
+            new[] { "ffffffffffffffffffffffffffffffff",
+                    "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong" },
+            new[] { "9e885d952ad362caeb4efe34a8e91bd2",
+                    "ozone drill grab fiber curtain grace pudding thank " +
+                    "cruise elder eight picnic" },
+        };
+        foreach (var v in vectores)
+        {
+            string obtenido = string.Join(" ", EntropiaAPalabras(DeHex(v[0])));
+            Comprobar(obtenido == v[1], $"vector {v[0]}:\n  {obtenido}");
+        }
+
+        // 50 unos -> todos los digitos a 0 -> N = 0 -> entropia toda a cero
+        Comprobar(AHex(TiradasAEntropia(Repetir(1, 50))) == new string('0', 32),
+            "50 unos deberian dar entropia cero");
+        // 50 seises -> N = 6^50 - 1, contrastado con el calculo directo
+        Comprobar(AHex(TiradasAEntropia(Repetir(6, 50))) ==
+            AHex(ABytesBigEndian((BigInteger.Pow(6, 50) - 1) % DOS_ELEVADO_A_128, 16)),
+            "50 seises no cuadran con 6^50-1 mod 2^128");
+        // El orden importa: la primera tirada pesa 6^49, la ultima 6^0
+        var a = Repetir(1, 50); a[0] = 2;
+        var b = Repetir(1, 50); b[49] = 2;
+        Comprobar(AHex(TiradasAEntropia(a)) != AHex(TiradasAEntropia(b)),
+            "el orden de las tiradas deberia importar");
+        // Los helpers de bytes deben ser inversos exactos, incluido el bit alto a 1
+        byte[] extremo = DeHex("ffffffffffffffffffffffffffffffff");
+        Comprobar(AHex(ABytesBigEndian(DeBytesBigEndian(extremo), 16)) == AHex(extremo),
+            "ida y vuelta de bytes rota en el caso extremo");
+        // Las constantes tienen que encajar sin bits sobrantes
+        Comprobar(N_PALABRAS * BITS_POR_PALABRA == BITS_ENTROPIA + BITS_CHECKSUM,
+            "las constantes no encajan");
+
+        Console.WriteLine($"OK: {vectores.Length} vectores oficiales y 5 comprobaciones propias superados.");
+    }
+
+    static List<int> Repetir(int valor, int veces)
+    {
+        var lista = new List<int>();
+        for (int i = 0; i < veces; i++) lista.Add(valor);
+        return lista;
+    }
+
+    static byte[] DeHex(string hex)
+    {
+        var bytes = new byte[hex.Length / 2];
+        for (int i = 0; i < bytes.Length; i++)
+            bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+        return bytes;
+    }
+
+
+    // ========================================================================
+    //  PROGRAMA PRINCIPAL
+    // ========================================================================
+
+    static int Main(string[] args)
+    {
+        try
+        {
+            if (Array.IndexOf(args, "--test") >= 0) { Autotest(); return 0; }
+
+            var tiradas = LeerTiradas();
+            byte[] entropia = TiradasAEntropia(tiradas);        // pasos 1 y 2
+            string[] palabras = EntropiaAPalabras(entropia);    // pasos 3, 4 y 5
+
+            if (Array.IndexOf(args, "--detalle") >= 0) MostrarDetalle(tiradas, entropia);
+            MostrarResultado(tiradas, entropia, palabras);
+            return 0;
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine("\nERROR: " + e.Message);
+            return 1;
+        }
+    }
+
+
+    // ========================================================================
+    //  LA LISTA OFICIAL - 2048 palabras del BIP-39 en ingles
+    // ========================================================================
+    //
+    //  Dos propiedades la hacen especial:
+    //    - Son 2048 = 2^11 exactas, para que cada palabra valga 11 bits limpios.
+    //    - Las 4 PRIMERAS LETRAS son unicas (aban/abil/able...). Puedes apuntar
+    //      solo 4 letras por palabra sin perder informacion, util al grabar la
+    //      semilla en metal.
+    //
+    //  El orden es alfabetico y NO se puede alterar: la posicion ES el dato.
+    //
+    static readonly string[] PALABRAS = (@"
+        abandon ability able about above absent absorb abstract
+        absurd abuse access accident account accuse achieve acid
+        acoustic acquire across act action actor actress actual
+        adapt add addict address adjust admit adult advance
+        advice aerobic affair afford afraid again age agent
+        agree ahead aim air airport aisle alarm album
+        alcohol alert alien all alley allow almost alone
+        alpha already also alter always amateur amazing among
+        amount amused analyst anchor ancient anger angle angry
+        animal ankle announce annual another answer antenna antique
+        anxiety any apart apology appear apple approve april
+        arch arctic area arena argue arm armed armor
+        army around arrange arrest arrive arrow art artefact
+        artist artwork ask aspect assault asset assist assume
+        asthma athlete atom attack attend attitude attract auction
+        audit august aunt author auto autumn average avocado
+        avoid awake aware away awesome awful awkward axis
+        baby bachelor bacon badge bag balance balcony ball
+        bamboo banana banner bar barely bargain barrel base
+        basic basket battle beach bean beauty because become
+        beef before begin behave behind believe below belt
+        bench benefit best betray better between beyond bicycle
+        bid bike bind biology bird birth bitter black
+        blade blame blanket blast bleak bless blind blood
+        blossom blouse blue blur blush board boat body
+        boil bomb bone bonus book boost border boring
+        borrow boss bottom bounce box boy bracket brain
+        brand brass brave bread breeze brick bridge brief
+        bright bring brisk broccoli broken bronze broom brother
+        brown brush bubble buddy budget buffalo build bulb
+        bulk bullet bundle bunker burden burger burst bus
+        business busy butter buyer buzz cabbage cabin cable
+        cactus cage cake call calm camera camp can
+        canal cancel candy cannon canoe canvas canyon capable
+        capital captain car carbon card cargo carpet carry
+        cart case cash casino castle casual cat catalog
+        catch category cattle caught cause caution cave ceiling
+        celery cement census century cereal certain chair chalk
+        champion change chaos chapter charge chase chat cheap
+        check cheese chef cherry chest chicken chief child
+        chimney choice choose chronic chuckle chunk churn cigar
+        cinnamon circle citizen city civil claim clap clarify
+        claw clay clean clerk clever click client cliff
+        climb clinic clip clock clog close cloth cloud
+        clown club clump cluster clutch coach coast coconut
+        code coffee coil coin collect color column combine
+        come comfort comic common company concert conduct confirm
+        congress connect consider control convince cook cool copper
+        copy coral core corn correct cost cotton couch
+        country couple course cousin cover coyote crack cradle
+        craft cram crane crash crater crawl crazy cream
+        credit creek crew cricket crime crisp critic crop
+        cross crouch crowd crucial cruel cruise crumble crunch
+        crush cry crystal cube culture cup cupboard curious
+        current curtain curve cushion custom cute cycle dad
+        damage damp dance danger daring dash daughter dawn
+        day deal debate debris decade december decide decline
+        decorate decrease deer defense define defy degree delay
+        deliver demand demise denial dentist deny depart depend
+        deposit depth deputy derive describe desert design desk
+        despair destroy detail detect develop device devote diagram
+        dial diamond diary dice diesel diet differ digital
+        dignity dilemma dinner dinosaur direct dirt disagree discover
+        disease dish dismiss disorder display distance divert divide
+        divorce dizzy doctor document dog doll dolphin domain
+        donate donkey donor door dose double dove draft
+        dragon drama drastic draw dream dress drift drill
+        drink drip drive drop drum dry duck dumb
+        dune during dust dutch duty dwarf dynamic eager
+        eagle early earn earth easily east easy echo
+        ecology economy edge edit educate effort egg eight
+        either elbow elder electric elegant element elephant elevator
+        elite else embark embody embrace emerge emotion employ
+        empower empty enable enact end endless endorse enemy
+        energy enforce engage engine enhance enjoy enlist enough
+        enrich enroll ensure enter entire entry envelope episode
+        equal equip era erase erode erosion error erupt
+        escape essay essence estate eternal ethics evidence evil
+        evoke evolve exact example excess exchange excite exclude
+        excuse execute exercise exhaust exhibit exile exist exit
+        exotic expand expect expire explain expose express extend
+        extra eye eyebrow fabric face faculty fade faint
+        faith fall false fame family famous fan fancy
+        fantasy farm fashion fat fatal father fatigue fault
+        favorite feature february federal fee feed feel female
+        fence festival fetch fever few fiber fiction field
+        figure file film filter final find fine finger
+        finish fire firm first fiscal fish fit fitness
+        fix flag flame flash flat flavor flee flight
+        flip float flock floor flower fluid flush fly
+        foam focus fog foil fold follow food foot
+        force forest forget fork fortune forum forward fossil
+        foster found fox fragile frame frequent fresh friend
+        fringe frog front frost frown frozen fruit fuel
+        fun funny furnace fury future gadget gain galaxy
+        gallery game gap garage garbage garden garlic garment
+        gas gasp gate gather gauge gaze general genius
+        genre gentle genuine gesture ghost giant gift giggle
+        ginger giraffe girl give glad glance glare glass
+        glide glimpse globe gloom glory glove glow glue
+        goat goddess gold good goose gorilla gospel gossip
+        govern gown grab grace grain grant grape grass
+        gravity great green grid grief grit grocery group
+        grow grunt guard guess guide guilt guitar gun
+        gym habit hair half hammer hamster hand happy
+        harbor hard harsh harvest hat have hawk hazard
+        head health heart heavy hedgehog height hello helmet
+        help hen hero hidden high hill hint hip
+        hire history hobby hockey hold hole holiday hollow
+        home honey hood hope horn horror horse hospital
+        host hotel hour hover hub huge human humble
+        humor hundred hungry hunt hurdle hurry hurt husband
+        hybrid ice icon idea identify idle ignore ill
+        illegal illness image imitate immense immune impact impose
+        improve impulse inch include income increase index indicate
+        indoor industry infant inflict inform inhale inherit initial
+        inject injury inmate inner innocent input inquiry insane
+        insect inside inspire install intact interest into invest
+        invite involve iron island isolate issue item ivory
+        jacket jaguar jar jazz jealous jeans jelly jewel
+        job join joke journey joy judge juice jump
+        jungle junior junk just kangaroo keen keep ketchup
+        key kick kid kidney kind kingdom kiss kit
+        kitchen kite kitten kiwi knee knife knock know
+        lab label labor ladder lady lake lamp language
+        laptop large later latin laugh laundry lava law
+        lawn lawsuit layer lazy leader leaf learn leave
+        lecture left leg legal legend leisure lemon lend
+        length lens leopard lesson letter level liar liberty
+        library license life lift light like limb limit
+        link lion liquid list little live lizard load
+        loan lobster local lock logic lonely long loop
+        lottery loud lounge love loyal lucky luggage lumber
+        lunar lunch luxury lyrics machine mad magic magnet
+        maid mail main major make mammal man manage
+        mandate mango mansion manual maple marble march margin
+        marine market marriage mask mass master match material
+        math matrix matter maximum maze meadow mean measure
+        meat mechanic medal media melody melt member memory
+        mention menu mercy merge merit merry mesh message
+        metal method middle midnight milk million mimic mind
+        minimum minor minute miracle mirror misery miss mistake
+        mix mixed mixture mobile model modify mom moment
+        monitor monkey monster month moon moral more morning
+        mosquito mother motion motor mountain mouse move movie
+        much muffin mule multiply muscle museum mushroom music
+        must mutual myself mystery myth naive name napkin
+        narrow nasty nation nature near neck need negative
+        neglect neither nephew nerve nest net network neutral
+        never news next nice night noble noise nominee
+        noodle normal north nose notable note nothing notice
+        novel now nuclear number nurse nut oak obey
+        object oblige obscure observe obtain obvious occur ocean
+        october odor off offer office often oil okay
+        old olive olympic omit once one onion online
+        only open opera opinion oppose option orange orbit
+        orchard order ordinary organ orient original orphan ostrich
+        other outdoor outer output outside oval oven over
+        own owner oxygen oyster ozone pact paddle page
+        pair palace palm panda panel panic panther paper
+        parade parent park parrot party pass patch path
+        patient patrol pattern pause pave payment peace peanut
+        pear peasant pelican pen penalty pencil people pepper
+        perfect permit person pet phone photo phrase physical
+        piano picnic picture piece pig pigeon pill pilot
+        pink pioneer pipe pistol pitch pizza place planet
+        plastic plate play please pledge pluck plug plunge
+        poem poet point polar pole police pond pony
+        pool popular portion position possible post potato pottery
+        poverty powder power practice praise predict prefer prepare
+        present pretty prevent price pride primary print priority
+        prison private prize problem process produce profit program
+        project promote proof property prosper protect proud provide
+        public pudding pull pulp pulse pumpkin punch pupil
+        puppy purchase purity purpose purse push put puzzle
+        pyramid quality quantum quarter question quick quit quiz
+        quote rabbit raccoon race rack radar radio rail
+        rain raise rally ramp ranch random range rapid
+        rare rate rather raven raw razor ready real
+        reason rebel rebuild recall receive recipe record recycle
+        reduce reflect reform refuse region regret regular reject
+        relax release relief rely remain remember remind remove
+        render renew rent reopen repair repeat replace report
+        require rescue resemble resist resource response result retire
+        retreat return reunion reveal review reward rhythm rib
+        ribbon rice rich ride ridge rifle right rigid
+        ring riot ripple risk ritual rival river road
+        roast robot robust rocket romance roof rookie room
+        rose rotate rough round route royal rubber rude
+        rug rule run runway rural sad saddle sadness
+        safe sail salad salmon salon salt salute same
+        sample sand satisfy satoshi sauce sausage save say
+        scale scan scare scatter scene scheme school science
+        scissors scorpion scout scrap screen script scrub sea
+        search season seat second secret section security seed
+        seek segment select sell seminar senior sense sentence
+        series service session settle setup seven shadow shaft
+        shallow share shed shell sheriff shield shift shine
+        ship shiver shock shoe shoot shop short shoulder
+        shove shrimp shrug shuffle shy sibling sick side
+        siege sight sign silent silk silly silver similar
+        simple since sing siren sister situate six size
+        skate sketch ski skill skin skirt skull slab
+        slam sleep slender slice slide slight slim slogan
+        slot slow slush small smart smile smoke smooth
+        snack snake snap sniff snow soap soccer social
+        sock soda soft solar soldier solid solution solve
+        someone song soon sorry sort soul sound soup
+        source south space spare spatial spawn speak special
+        speed spell spend sphere spice spider spike spin
+        spirit split spoil sponsor spoon sport spot spray
+        spread spring spy square squeeze squirrel stable stadium
+        staff stage stairs stamp stand start state stay
+        steak steel stem step stereo stick still sting
+        stock stomach stone stool story stove strategy street
+        strike strong struggle student stuff stumble style subject
+        submit subway success such sudden suffer sugar suggest
+        suit summer sun sunny sunset super supply supreme
+        sure surface surge surprise surround survey suspect sustain
+        swallow swamp swap swarm swear sweet swift swim
+        swing switch sword symbol symptom syrup system table
+        tackle tag tail talent talk tank tape target
+        task taste tattoo taxi teach team tell ten
+        tenant tennis tent term test text thank that
+        theme then theory there they thing this thought
+        three thrive throw thumb thunder ticket tide tiger
+        tilt timber time tiny tip tired tissue title
+        toast tobacco today toddler toe together toilet token
+        tomato tomorrow tone tongue tonight tool tooth top
+        topic topple torch tornado tortoise toss total tourist
+        toward tower town toy track trade traffic tragic
+        train transfer trap trash travel tray treat tree
+        trend trial tribe trick trigger trim trip trophy
+        trouble truck true truly trumpet trust truth try
+        tube tuition tumble tuna tunnel turkey turn turtle
+        twelve twenty twice twin twist two type typical
+        ugly umbrella unable unaware uncle uncover under undo
+        unfair unfold unhappy uniform unique unit universe unknown
+        unlock until unusual unveil update upgrade uphold upon
+        upper upset urban urge usage use used useful
+        useless usual utility vacant vacuum vague valid valley
+        valve van vanish vapor various vast vault vehicle
+        velvet vendor venture venue verb verify version very
+        vessel veteran viable vibrant vicious victory video view
+        village vintage violin virtual virus visa visit visual
+        vital vivid vocal voice void volcano volume vote
+        voyage wage wagon wait walk wall walnut want
+        warfare warm warrior wash wasp waste water wave
+        way wealth weapon wear weasel weather web wedding
+        weekend weird welcome west wet whale what wheat
+        wheel when where whip whisper wide width wife
+        wild will win window wine wing wink winner
+        winter wire wisdom wise wish witness wolf woman
+        wonder wood wool word work world worry worth
+        wrap wreck wrestle wrist write wrong yard year
+        yellow you young youth zebra zero zone zoo
+").Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+}
+</script>
+
+<script>
+/* ---------- idioma ---------- */
+function setLang(l){
+  document.documentElement.setAttribute('data-lang', l);
+  document.documentElement.setAttribute('lang', l);
+  document.getElementById('btn-es').setAttribute('aria-pressed', l==='es');
+  document.getElementById('btn-en').setAttribute('aria-pressed', l==='en');
+  location.hash = l==='en' ? 'en' : '';
+}
+if (location.hash === '#en') setLang('en');
+
+/* ---------- partidor de bits ----------
+   Ejemplo público de demostración. Datos calculados a partir de las tiradas
+   31642551326641235416225346153244615236415263142563 */
+const GRUPOS = [
+  ['11011010010',1746,'surge'],   ['10001001100',1100,'maze'],
+  ['10101110010',1394,'purity'],  ['10001101101',1133,'misery'],
+  ['11000010111',1559,'seed'],    ['11011010110',1750,'suspect'],
+  ['00010011110', 158,'because'], ['00100000110', 262,'camp'],
+  ['10001110111',1143,'moment'],  ['11000001111',1551,'sea'],
+  ['01011010011', 723,'foil'],    ['01110000000', 896,'hybrid']
+];
+
+const cBits = document.getElementById('bits');
+const cWords = document.getElementById('words');
+
+GRUPOS.forEach(function(g, i){
+  const s = document.createElement('span');
+  s.className = 'grp' + (i === 11 ? ' ck' : '');
+  s.textContent = g[0];
+  s.dataset.i = i;
+  cBits.appendChild(s);
+
+  const w = document.createElement('div');
+  w.className = 'wcell';
+  w.dataset.i = i;
+  w.innerHTML = '<span class="i">' + (i+1) + '</span>' +
+                '<span class="w">' + g[2] + '</span>' +
+                '<span class="x">' + g[1] + '</span>';
+  cWords.appendChild(w);
+});
+
+function marcar(i, on){
+  document.querySelectorAll('[data-i="' + i + '"]').forEach(function(el){
+    el.classList.toggle('on', on);
+  });
+}
+[cBits, cWords].forEach(function(c){
+  c.addEventListener('mouseover', function(e){
+    const t = e.target.closest('[data-i]'); if (t) marcar(t.dataset.i, true);
+  });
+  c.addEventListener('mouseout', function(e){
+    const t = e.target.closest('[data-i]'); if (t) marcar(t.dataset.i, false);
+  });
+});
+
+/* ---------- visor de código ----------
+   Los scripts van incrustados en este fichero, así que el visor funciona
+   igual servido por web que abierto en local sin conexión. El navegador
+   calcula su SHA-256 y lo compara con el hash publicado. */
+const viewer = document.getElementById('viewer');
+const es = function(){ return document.documentElement.getAttribute('data-lang') === 'es'; };
+
+const HASHES = {
+  'bip39_dados.py':'66d9f0b42288760e7f228e59ffa4e51f1fc9fa509b36f5f1900aedb1fab02d20',
+  'bip39_dados.js':'19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9',
+  'bip39_dados.cs':'de49a113e47e2afbaf3649abb2a01102618c4027521e4022bf92de11d082a726'
+};
+
+/* El HTML obliga a un salto de línea tras la etiqueta de apertura; se quita
+   para recuperar el fichero byte a byte. */
+function fuente(fichero){
+  return document.getElementById('src-' + fichero).textContent.replace(/^\n/, '');
+}
+
+function descargar(fichero){
+  const url = URL.createObjectURL(new Blob([fuente(fichero)], {type:'text/plain'}));
+  const a = document.createElement('a');
+  a.href = url; a.download = fichero; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+function verCodigo(fichero){
+  const txt = fuente(fichero);
+  document.getElementById('vname').textContent = fichero;
+  document.getElementById('vcode').textContent = txt;
+  viewer.classList.add('open');
+  viewer.scrollIntoView({block:'nearest'});
+
+  const st = document.getElementById('vstatus');
+  st.className = '';
+  st.textContent = txt.split('\n').length + (es() ? ' líneas' : ' lines');
+
+  /* crypto.subtle no existe en contextos no seguros muy antiguos: si falta,
+     simplemente no se muestra el veredicto en vez de romper la página. */
+  if (!(window.crypto && window.crypto.subtle)) return;
+
+  crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt)).then(function(buf){
+    const hex = Array.from(new Uint8Array(buf))
+      .map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    const bien = hex === HASHES[fichero];
+    st.className = bien ? 'ok' : 'bad';
+    st.textContent = (bien ? '✓ sha256 ' : '✗ ') +
+      (bien ? hex.slice(0,16) + '…'
+            : (es() ? 'el hash NO coincide con el publicado'
+                    : 'hash does NOT match the published one'));
+  }).catch(function(){ /* sin veredicto */ });
+}
+function cerrarVisor(){ viewer.classList.remove('open'); }
+</script>
+</body>
+</html>
