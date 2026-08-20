@@ -146,9 +146,12 @@ nav.jump a:hover{color:var(--brass)}
 /* ---------- scripts ---------- */
 .scripts{display:grid; gap:1rem; margin-top:1.4rem}
 @media(min-width:820px){.scripts{grid-template-columns:repeat(3,1fr)}}
-.sc{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.2rem; display:flex; flex-direction:column}
-.sc h3{margin:0 0 .2rem; color:var(--bone); font-size:1.05rem}
-.sc .req{font-family:var(--mono); font-size:.74rem; color:var(--bone-faint); margin-bottom:.8rem; letter-spacing:.03em}
+/* min-width:0 en la tarjeta y en el bloque de comandos: sin ellos, las
+   líneas largas del ejemplo de C# ensanchan la columna del grid y la página
+   entera acaba con scroll horizontal, en vez de scrollar solo el código. */
+.sc{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.2rem; display:flex; flex-direction:column; min-width:0}
+.sc > *{min-width:0}
+.sc h3{margin:0 0 .5rem; color:var(--bone); font-size:1.05rem}
 .sc p{font-size:.9rem; color:var(--bone-dim); margin-bottom:1rem; max-width:none}
 .sc .acts{margin-top:auto; display:flex; gap:.5rem; flex-wrap:wrap}
 .btn{font-family:var(--mono); font-size:.76rem; letter-spacing:.07em; text-transform:uppercase;
@@ -159,6 +162,19 @@ nav.jump a:hover{color:var(--brass)}
 .btn.solid:hover{background:var(--bone); border-color:var(--bone); color:var(--felt-900)}
 .hashline{font-family:var(--mono); font-size:.68rem; color:var(--bone-faint); word-break:break-all; margin-top:.8rem; line-height:1.5}
 
+/* bloques de requisitos e instrucciones dentro de cada tarjeta */
+.lab{font-family:var(--mono); font-size:.63rem; letter-spacing:.17em; text-transform:uppercase;
+     color:var(--bone-faint); display:block; margin-bottom:.45rem}
+.reqs{list-style:none; margin:0 0 1.1rem; padding:0; font-size:.83rem; color:var(--bone-dim); max-width:none}
+.reqs li{margin:.25rem 0; padding-left:1.1rem; position:relative; line-height:1.5}
+.reqs li::before{content:"›"; position:absolute; left:.1rem; color:var(--brass)}
+.reqs li b{color:var(--bone); font-weight:600}
+.run{font-family:var(--mono); font-size:.735rem; line-height:1.75; background:var(--felt-900);
+     border:1px solid var(--felt-600); border-radius:6px; padding:.75rem .85rem; margin:0 0 1.1rem;
+     overflow-x:auto; white-space:pre; color:var(--bone)}
+.run .cm{color:#6F9280}
+.run .hd{color:var(--brass); font-weight:600}
+
 /* visor */
 .viewer{margin-top:1.6rem; border:1px solid var(--felt-600); border-radius:8px; overflow:hidden; display:none}
 .viewer.open{display:block}
@@ -168,7 +184,43 @@ nav.jump a:hover{color:var(--brass)}
 .vhead #vstatus.ok{color:var(--brass)}
 .vhead #vstatus.bad{color:var(--cherry); font-weight:700}
 .vhead button{margin-left:auto}
-pre.code{margin:0; padding:1rem; background:var(--felt-900); overflow:auto; max-height:60vh; font-family:var(--mono); font-size:.74rem; line-height:1.6; color:var(--bone-dim); white-space:pre}
+/* leyenda de colores del visor. Por debajo de 760px se oculta y el botón
+   recupera el margen automático que lo empuja a la derecha. */
+.leyenda{display:none; gap:.85rem; font-size:.7rem; color:var(--bone-faint); letter-spacing:.02em}
+.leyenda span{display:inline-flex; align-items:center; gap:.32rem}
+.leyenda i{width:.62rem; height:.62rem; border-radius:2px; display:inline-block}
+.leyenda .k-x{background:var(--bone)} .leyenda .k-c{background:#6F9280} .leyenda .k-s{background:#C7A25E}
+@media(min-width:760px){
+  .leyenda{display:flex; margin-left:auto}
+  .vhead .leyenda ~ button{margin-left:0}
+}
+
+pre.code{margin:0; padding:1rem; background:var(--felt-900); overflow:auto; max-height:60vh;
+         font-family:var(--mono); font-size:.74rem; line-height:1.6; color:var(--bone); white-space:pre}
+/* resaltado: comentario · docstring · cadena. El resto queda en color código. */
+pre.code .c,pre.code .d{color:#6F9280}
+pre.code .s{color:#C7A25E}
+
+/* ---------- herramienta de comprobación cruzada ---------- */
+.tool{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px;
+      padding:1.4rem 1.5rem; margin-top:1.3rem}
+.tool > h3:first-child{margin-top:0; margin-bottom:1.1rem}
+.tool .lab{margin-top:1.5rem}
+.tool > h3:first-child + .lab{margin-top:0}
+.tool p{max-width:var(--measure)}
+.toolgrid{display:grid; gap:1.4rem; margin:1.2rem 0}
+@media(min-width:720px){.toolgrid{grid-template-columns:1fr 1fr}}
+.toolgrid > *{min-width:0}
+.toolgrid .run{margin-bottom:0}
+.toolgrid .reqs{margin-bottom:0}
+/* qué contiene el informe */
+.fields{display:grid; gap:.5rem; margin:1rem 0 1.2rem; max-width:var(--measure)}
+.field{display:grid; grid-template-columns:9.5rem 1fr; gap:.7rem; align-items:baseline;
+       font-family:var(--mono); font-size:.74rem; background:var(--felt-900);
+       border:1px solid var(--felt-600); border-radius:5px; padding:.5rem .7rem}
+.field b{color:var(--brass); font-weight:600; letter-spacing:.02em}
+.field span{color:var(--bone-dim); word-break:break-all}
+@media(max-width:560px){.field{grid-template-columns:1fr; gap:.15rem}}
 
 /* ---------- checklist ---------- */
 .check{list-style:none; padding:0; margin:1.5rem 0 0; max-width:var(--measure)}
@@ -408,9 +460,39 @@ byte 0x05 = 0000 0101
   <div class="scripts">
     <div class="sc">
       <h3>Python</h3>
-      <div class="req">python3 · <span data-l="es">versión 3.2 o superior</span><span data-l="en">version 3.2 or later</span></div>
       <p data-l="es">La opción por defecto: ya viene instalado en macOS y en cualquier Linux. Es el más corto y el más fácil de leer sin saber programar.</p>
       <p data-l="en">The default choice: already installed on macOS and any Linux. It's the shortest and the easiest to read without programming experience.</p>
+
+      <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
+      <ul class="reqs" data-l="es">
+        <li><b>Python 3.2</b> o superior</li>
+        <li>Preinstalado en macOS y Linux</li>
+        <li>Sin dependencias: solo <code>hashlib</code></li>
+      </ul>
+      <ul class="reqs" data-l="en">
+        <li><b>Python 3.2</b> or later</li>
+        <li>Preinstalled on macOS and Linux</li>
+        <li>No dependencies: just <code>hashlib</code></li>
+      </ul>
+
+      <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
+      <div class="run" data-l="es"><span class="cm"># comprueba los vectores</span>
+python3 bip39_dados.py --test
+
+<span class="cm"># pide las 50 tiradas</span>
+python3 bip39_dados.py
+
+<span class="cm"># imprime cada paso</span>
+python3 bip39_dados.py --detalle</div>
+      <div class="run" data-l="en"><span class="cm"># checks the vectors</span>
+python3 bip39_dados.py --test
+
+<span class="cm"># prompts for the rolls</span>
+python3 bip39_dados.py
+
+<span class="cm"># prints every step</span>
+python3 bip39_dados.py --detalle</div>
+
       <div class="acts">
         <button class="btn solid" onclick="descargar('bip39_dados.py')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
         <button class="btn" onclick="verCodigo('bip39_dados.py')" data-l="es">Ver código</button>
@@ -421,9 +503,39 @@ byte 0x05 = 0000 0101
 
     <div class="sc">
       <h3>JavaScript</h3>
-      <div class="req">Node.js · <span data-l="es">versión 10.4 o superior</span><span data-l="en">version 10.4 or later</span></div>
       <p data-l="es">Para quien ya trabaja con Node. Usa <code>BigInt</code>, así que el propio lenguaje impide perder precisión por accidente.</p>
       <p data-l="en">For anyone already working with Node. It uses <code>BigInt</code>, so the language itself prevents accidental loss of precision.</p>
+
+      <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
+      <ul class="reqs" data-l="es">
+        <li><b>Node.js 10.4</b> o superior</li>
+        <li>Necesita <code>BigInt</code>, nativo desde esa versión</li>
+        <li>Sin <code>npm install</code>: solo <code>crypto</code> y <code>readline</code></li>
+      </ul>
+      <ul class="reqs" data-l="en">
+        <li><b>Node.js 10.4</b> or later</li>
+        <li>Needs <code>BigInt</code>, native since that version</li>
+        <li>No <code>npm install</code>: just <code>crypto</code> and <code>readline</code></li>
+      </ul>
+
+      <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
+      <div class="run" data-l="es"><span class="cm"># comprueba los vectores</span>
+node bip39_dados.js --test
+
+<span class="cm"># pide las 50 tiradas</span>
+node bip39_dados.js
+
+<span class="cm"># imprime cada paso</span>
+node bip39_dados.js --detalle</div>
+      <div class="run" data-l="en"><span class="cm"># checks the vectors</span>
+node bip39_dados.js --test
+
+<span class="cm"># prompts for the rolls</span>
+node bip39_dados.js
+
+<span class="cm"># prints every step</span>
+node bip39_dados.js --detalle</div>
+
       <div class="acts">
         <button class="btn solid" onclick="descargar('bip39_dados.js')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
         <button class="btn" onclick="verCodigo('bip39_dados.js')" data-l="es">Ver código</button>
@@ -434,9 +546,45 @@ byte 0x05 = 0000 0101
 
     <div class="sc">
       <h3>C#</h3>
-      <div class="req">.NET 6+ · Mono · .NET Framework 4.6</div>
       <p data-l="es">Para entornos Windows. Se compila a un ejecutable, útil si prefieres no instalar un intérprete en la máquina sin red.</p>
       <p data-l="en">For Windows environments. It compiles to an executable, useful if you'd rather not install an interpreter on the offline machine.</p>
+
+      <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
+      <ul class="reqs" data-l="es">
+        <li><b>.NET 6+</b>, <b>Mono</b> o <b>.NET Framework 4.6</b></li>
+        <li>Compila con <code>-langversion:6</code> (C# de 2015)</li>
+        <li>Sin paquetes NuGet</li>
+      </ul>
+      <ul class="reqs" data-l="en">
+        <li><b>.NET 6+</b>, <b>Mono</b> or <b>.NET Framework 4.6</b></li>
+        <li>Builds with <code>-langversion:6</code> (C# from 2015)</li>
+        <li>No NuGet packages</li>
+      </ul>
+
+      <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
+      <div class="run" data-l="es"><span class="hd"># .NET 6 o superior</span>
+dotnet new console -o bip39
+cp bip39_dados.cs \
+   bip39/Program.cs
+cd bip39
+dotnet run -- --test
+
+<span class="hd"># Mono (cualquier Unix)</span>
+mcs -r:System.Numerics.dll \
+    bip39_dados.cs
+mono bip39_dados.exe --test</div>
+      <div class="run" data-l="en"><span class="hd"># .NET 6 or later</span>
+dotnet new console -o bip39
+cp bip39_dados.cs \
+   bip39/Program.cs
+cd bip39
+dotnet run -- --test
+
+<span class="hd"># Mono (any Unix)</span>
+mcs -r:System.Numerics.dll \
+    bip39_dados.cs
+mono bip39_dados.exe --test</div>
+
       <div class="acts">
         <button class="btn solid" onclick="descargar('bip39_dados.cs')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
         <button class="btn" onclick="verCodigo('bip39_dados.cs')" data-l="es">Ver código</button>
@@ -450,6 +598,16 @@ byte 0x05 = 0000 0101
     <div class="vhead">
       <span class="name" id="vname"></span>
       <span id="vstatus"></span>
+      <span class="leyenda" aria-hidden="true" data-l="es">
+        <span><i class="k-x"></i>código</span>
+        <span><i class="k-c"></i>comentario</span>
+        <span><i class="k-s"></i>texto</span>
+      </span>
+      <span class="leyenda" aria-hidden="true" data-l="en">
+        <span><i class="k-x"></i>code</span>
+        <span><i class="k-c"></i>comment</span>
+        <span><i class="k-s"></i>text</span>
+      </span>
       <button class="btn" onclick="cerrarVisor()" data-l="es">Cerrar</button>
       <button class="btn" onclick="cerrarVisor()" data-l="en">Close</button>
     </div>
@@ -458,10 +616,108 @@ byte 0x05 = 0000 0101
 
   <div class="note">
     <span class="tag" data-l="es">Esta página se verifica a sí misma</span><span class="tag" data-l="en">This page verifies itself</span>
-    <p data-l="es">Los tres scripts van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
-    <p data-l="en">All three scripts live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
+    <p data-l="es">Los cuatro scripts de esta página van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
+    <p data-l="en">All four scripts on this page live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
     <p data-l="es"><strong>Guarda esta página</strong> (Ctrl-S / Cmd-S) y llévatela al ordenador sin red: funciona entera sin conexión, scripts incluidos. Aun así, la verificación que de verdad cuenta es la firma GPG de abajo.</p>
     <p data-l="en"><strong>Save this page</strong> (Ctrl-S / Cmd-S) and take it to your offline computer: it works completely without a connection, scripts included. Even so, the verification that really counts is the GPG signature below.</p>
+  </div>
+
+  <!-- ---------- comprobación cruzada entre los tres ---------- -->
+  <h3 data-l="es">Comprobar que los tres coinciden</h3>
+  <h3 data-l="en">Checking that all three agree</h3>
+  <p data-l="es">Los tres scripts <em>deberían</em> dar exactamente las mismas 12 palabras a partir de las mismas tiradas. «Debería» no es una garantía: un fallo al portar el algoritmo de un lenguaje a otro produciría palabras distintas sin que nada avisara. Este cuarto script lo comprueba por ti, y deja un informe escrito de cada prueba.</p>
+  <p data-l="en">All three scripts <em>should</em> produce exactly the same 12 words from the same rolls. "Should" is not a guarantee: a mistake porting the algorithm from one language to another would produce different words with nothing to warn you. This fourth script checks it for you, and leaves a written report of every test.</p>
+
+  <div class="tool">
+    <h3 style="margin-top:0">comparar_implementaciones.sh</h3>
+
+    <span class="lab" data-l="es">Qué hace, en orden</span><span class="lab" data-l="en">What it does, in order</span>
+    <ol data-l="es" style="font-size:.9rem;color:var(--bone-dim)">
+      <li>Lanza <code>--test</code> en las tres implementaciones: los vectores oficiales de BIP-39.</li>
+      <li>Saca 50 tiradas al azar de <code>/dev/urandom</code>.</li>
+      <li>Se las pasa a Python, Node y C# por la entrada estándar, sin tocarlas.</li>
+      <li>Compara la entropía y las 12 palabras de los tres. Si algo difiere, termina con error.</li>
+      <li>Escribe un informe en <code>scripts/informes/</code>, uno por ronda.</li>
+    </ol>
+    <ol data-l="en" style="font-size:.9rem;color:var(--bone-dim)">
+      <li>Runs <code>--test</code> on all three implementations: the official BIP-39 vectors.</li>
+      <li>Draws 50 random rolls from <code>/dev/urandom</code>.</li>
+      <li>Feeds them to Python, Node and C# on standard input, unmodified.</li>
+      <li>Compares the entropy and the 12 words across all three. If anything differs, it exits with an error.</li>
+      <li>Writes a report into <code>scripts/informes/</code>, one per round.</li>
+    </ol>
+
+    <div class="toolgrid">
+      <div>
+        <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
+        <ul class="reqs" data-l="es">
+          <li><b>bash</b> · macOS, Linux o WSL en Windows</li>
+          <li>Los <b>tres lenguajes a la vez</b>: python3, node y mono o dotnet</li>
+          <li>La <b>estructura del repositorio</b>: no funciona con el <code>.sh</code> suelto</li>
+          <li>Ninguna dependencia nueva</li>
+        </ul>
+        <ul class="reqs" data-l="en">
+          <li><b>bash</b> · macOS, Linux or WSL on Windows</li>
+          <li>All <b>three languages at once</b>: python3, node and mono or dotnet</li>
+          <li>The <b>repository layout</b>: it won't work as a loose <code>.sh</code></li>
+          <li>No new dependencies</li>
+        </ul>
+      </div>
+      <div>
+        <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
+        <div class="run" data-l="es">git clone https://github.com/fotoshi/dice-seed
+cd dice-seed/scripts
+
+./comparar_implementaciones.sh      <span class="cm"># 5 rondas</span>
+./comparar_implementaciones.sh 20   <span class="cm"># 20 rondas</span></div>
+        <div class="run" data-l="en">git clone https://github.com/fotoshi/dice-seed
+cd dice-seed/scripts
+
+./comparar_implementaciones.sh      <span class="cm"># 5 rounds</span>
+./comparar_implementaciones.sh 20   <span class="cm"># 20 rounds</span></div>
+      </div>
+    </div>
+
+    <span class="lab" data-l="es">Qué contiene cada informe</span><span class="lab" data-l="en">What each report contains</span>
+    <div class="fields" data-l="es">
+      <div class="field"><b>Identificador</b><span>la entropía en hexadecimal, que además da nombre al fichero</span></div>
+      <div class="field"><b>Tiradas</b><span>las 50 usadas, para poder repetir la prueba</span></div>
+      <div class="field"><b>Comandos</b><span>la orden exacta lanzada en cada lenguaje, copiable tal cual</span></div>
+      <div class="field"><b>Palabras</b><span>las 12 de cada implementación, en tabla, para compararlas de un vistazo</span></div>
+      <div class="field"><b>Entropía</b><span>en hexadecimal, binario, base 6 y decimal</span></div>
+    </div>
+    <div class="fields" data-l="en">
+      <div class="field"><b>Identifier</b><span>the hex entropy, which also names the file</span></div>
+      <div class="field"><b>Rolls</b><span>the 50 used, so the test can be repeated</span></div>
+      <div class="field"><b>Commands</b><span>the exact command run in each language, copyable as is</span></div>
+      <div class="field"><b>Words</b><span>the 12 from each implementation, in a table, to compare at a glance</span></div>
+      <div class="field"><b>Entropy</b><span>in hexadecimal, binary, base 6 and decimal</span></div>
+    </div>
+
+    <p data-l="es">Los cuatro formatos de la entropía están para que puedas <strong>verificarla a mano con herramientas externas</strong>: el hexadecimal es el que aceptan otras carteras, la base 6 es la que puedes contrastar contra tus propios dados, y el binario deja ver los 128 bits uno a uno.</p>
+    <p data-l="en">The four entropy formats are there so you can <strong>verify it by hand with external tools</strong>: hex is what other wallets accept, base 6 is what you can check against your own dice, and binary lets you see all 128 bits one by one.</p>
+
+    <div class="calc" data-l="es">Hexadecimal  <b>948f3dfec1f7c1324e7e839d99643090</b>
+Binario      10010100100011110011110111111110…   <b>(128 bits)</b>
+Base 6       12443423241505325514332543542300250225102351221040
+Decimal      197469499237907254833369827531030802576</div>
+    <div class="calc" data-l="en">Hexadecimal  <b>948f3dfec1f7c1324e7e839d99643090</b>
+Binary       10010100100011110011110111111110…   <b>(128 bits)</b>
+Base 6       12443423241505325514332543542300250225102351221040
+Decimal      197469499237907254833369827531030802576</div>
+
+    <div class="note warn">
+      <span class="tag" data-l="es">El informe se escribe en disco</span><span class="tag" data-l="en">The report is written to disk</span>
+      <p data-l="es">Cada informe guarda la entropía y las 12 palabras <strong>en texto plano</strong>. Eso es justo lo que quieres al probar la herramienta con tiradas desechables, y justo lo que <strong>no</strong> quieres con tu semilla real. Usa este script solo para verificar las implementaciones, <strong>nunca con las tiradas que vayas a custodiar</strong>.</p>
+      <p data-l="en">Every report stores the entropy and the 12 words <strong>in plain text</strong>. That's exactly what you want when testing the tool with throwaway rolls, and exactly what you <strong>don't</strong> want with your real seed. Use this script only to verify the implementations — <strong>never with the rolls you intend to keep</strong>.</p>
+    </div>
+
+    <div class="acts">
+      <button class="btn solid" onclick="descargar('comparar_implementaciones.sh')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
+      <button class="btn" onclick="verCodigo('comparar_implementaciones.sh')" data-l="es">Ver código</button>
+      <button class="btn" onclick="verCodigo('comparar_implementaciones.sh')" data-l="en">View code</button>
+    </div>
+    <div class="hashline">9d0a7c26e24c09dba90ac68e236437695c947418efb9765872e4e932ecdb84d7</div>
   </div>
 </section>
 
@@ -2735,6 +2991,249 @@ static class Bip39Dados
 }
 </script>
 
+<script type="text/plain" id="src-comparar_implementaciones.sh">
+#!/usr/bin/env bash
+# comparar_implementaciones.sh
+#
+# Comprueba que las 3 implementaciones (Python, JavaScript, C#) producen
+# EXACTAMENTE las mismas 12 palabras BIP-39 cuando reciben las mismas 50
+# tiradas de dado, y deja un informe en Markdown por cada ronda para poder
+# verificar la entropia a mano con herramientas externas.
+#
+# No instala nada nuevo: reutiliza los mismos interpretes/compiladores que
+# cada script ya necesita para funcionar (python3, node, y mono o dotnet
+# para C#; python3 tambien se usa para las conversiones de base del informe).
+# Genera tiradas de prueba con /dev/urandom, que ya trae el sistema operativo.
+#
+# USO:
+#     ./comparar_implementaciones.sh          # 5 rondas aleatorias
+#     ./comparar_implementaciones.sh 20        # 20 rondas aleatorias
+#
+# Cada ronda genera un fichero en informes/<entropia-hex>.md (o
+# informes/<entropia-hex>_DESAJUSTE.md si las implementaciones no coinciden)
+# con: las tiradas usadas, el comando exacto para relanzar cada
+# implementacion, las 12 palabras de cada una y la entropia en hexadecimal,
+# binario, base 6 y decimal.
+#
+# Termina con codigo de salida 0 si todo coincide, 1 si alguna ronda difiere.
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PY="$ROOT/python/bip39_dados.py"
+JS="$ROOT/javascript/bip39_dados.js"
+CS="$ROOT/csharp/bip39_dados.cs"
+INFORMES="$ROOT/informes"
+
+N_RONDAS="${1:-5}"
+
+mkdir -p "$INFORMES"
+
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+# ---------------------------------------------------------------------------
+# Localizar como ejecutar C#: Mono si esta disponible (compila el fichero
+# suelto, sin crear un proyecto), si no dotnet (necesita un proyecto en
+# .NET 6-9). CS_LABEL/CS_CMD_SETUP/CS_CMD_RUN son solo para MOSTRAR en el
+# informe el comando reproducible; cs_run() es lo que de verdad se ejecuta.
+# ---------------------------------------------------------------------------
+if command -v mcs >/dev/null 2>&1 && command -v mono >/dev/null 2>&1; then
+  mcs -r:System.Numerics.dll -out:"$TMPDIR/bip39.exe" "$CS" >/dev/null
+  cs_run() { mono "$TMPDIR/bip39.exe" "$@"; }
+  CS_LABEL="Mono"
+  CS_CMD_SETUP="mcs -r:System.Numerics.dll -out:bip39_dados.exe scripts/csharp/bip39_dados.cs"
+  CS_CMD_RUN="mono bip39_dados.exe"
+elif command -v dotnet >/dev/null 2>&1; then
+  PROJ="$TMPDIR/csproj"
+  dotnet new console -o "$PROJ" >/dev/null
+  cp "$CS" "$PROJ/Program.cs"
+  dotnet build "$PROJ" -c Release -o "$PROJ/out" >/dev/null
+  DLL="$PROJ/out/$(basename "$PROJ").dll"
+  cs_run() { dotnet "$DLL" "$@"; }
+  CS_LABEL="dotnet"
+  CS_CMD_SETUP="dotnet new console -o bip39 && cp scripts/csharp/bip39_dados.cs bip39/Program.cs"
+  CS_CMD_RUN="dotnet run --project bip39"
+else
+  echo "ERROR: no se encontro ni mono ni dotnet. Instala uno de los dos para C#." >&2
+  exit 1
+fi
+
+echo "== Paso 1: autocomprobacion individual (--test) de cada implementacion =="
+python3 "$PY" --test
+node "$JS" --test
+cs_run --test
+echo
+
+# ---------------------------------------------------------------------------
+# Extrae de la salida completa de un programa la linea "Entropia : <hex>" y
+# la lista de 12 palabras, y las junta en un solo string "hex|palabras".
+# Las tres implementaciones imprimen ambas cosas con el mismo formato
+# ("Entropia : ..." y "NN. palabra"), asi que un mismo grep/awk vale para
+# las tres.
+# ---------------------------------------------------------------------------
+extraer() {
+  local salida="$1"
+  local hex
+  hex="$(grep -m1 '^Entropia' <<<"$salida" | awk '{print $3}')"
+  local palabras
+  palabras="$(grep -E '^[[:space:]]*[0-9]+\.[[:space:]]' <<<"$salida" | awk '{print $2}' | tr '\n' ' ')"
+  echo "${hex}|${palabras% }"
+}
+
+# ---------------------------------------------------------------------------
+# Imprime (a stdout) las filas de una tabla Markdown con la entropia dada en
+# hexadecimal, binario, base 6 y decimal. Usa python3 porque bash no maneja
+# enteros de 128 bits; python3 ya es una dependencia del proyecto.
+# ---------------------------------------------------------------------------
+formatos_md() {
+  local hex="$1"
+  python3 - "$hex" <<'PYEOF'
+import sys
+hexs = sys.argv[1]
+n = int(hexs, 16)
+binv = bin(n)[2:].zfill(128)
+
+def a_base6(n):
+    if n == 0:
+        return "0"
+    digitos = []
+    while n:
+        digitos.append(str(n % 6))
+        n //= 6
+    return "".join(reversed(digitos))
+
+b6 = a_base6(n).zfill(50)
+print('| Hexadecimal | `%s` |' % hexs)
+print('| Binario (128 bits) | `%s` |' % binv)
+print('| Base 6 (128 bits, digitos 0-5) | `%s` |' % b6)
+print('| Decimal | `%s` |' % n)
+PYEOF
+}
+
+# ---------------------------------------------------------------------------
+# Genera el informe Markdown de una ronda (a stdout; el llamador redirige a
+# fichero). El nombre del fichero lo pone el llamador, basado en la entropia.
+# ---------------------------------------------------------------------------
+generar_informe() {
+  local ronda="$1" tiradas="$2" coincide="$3"
+  local hex_py="$4" pal_py="$5"
+  local hex_js="$6" pal_js="$7"
+  local hex_cs="$8" pal_cs="$9"
+  local fecha
+  fecha="$(date '+%Y-%m-%d %H:%M:%S %z')"
+
+  printf '# Informe de comprobacion cruzada BIP-39 dado\n\n'
+  printf '**Identificador (entropia Python, hex):** `%s`\n\n' "$hex_py"
+  printf '**Fecha:** %s\n\n' "$fecha"
+  printf '**Ronda:** %s de %s\n\n' "$ronda" "$N_RONDAS"
+  printf '**Tiradas (50 valores 1-6, tal como se introdujeron):**\n\n'
+  printf '```\n%s\n```\n\n' "$tiradas"
+
+  printf '## Resultado\n\n'
+  if [[ "$coincide" == "si" ]]; then
+    printf '**OK** - las 3 implementaciones producen la misma entropia y las mismas 12 palabras.\n\n'
+  else
+    printf '**DESAJUSTE** - alguna implementacion difiere. No uses este metodo hasta resolverlo.\n\n'
+  fi
+
+  printf '## Comandos ejecutados\n\n'
+  printf 'Lanzados desde la raiz del repositorio, con las tiradas de arriba como entrada estandar.\n\n'
+
+  printf '### Python\n\n'
+  printf '```bash\necho %s | python3 scripts/python/bip39_dados.py\n```\n\n' "$tiradas"
+
+  printf '### JavaScript / Node.js\n\n'
+  printf '```bash\necho %s | node scripts/javascript/bip39_dados.js\n```\n\n' "$tiradas"
+
+  printf '### C# (%s)\n\n' "$CS_LABEL"
+  printf '```bash\n%s\necho %s | %s\n```\n\n' "$CS_CMD_SETUP" "$tiradas" "$CS_CMD_RUN"
+
+  printf '## Palabras resultantes\n\n'
+  printf '| Implementacion | Palabras (1 -> 12) |\n'
+  printf '|---|---|\n'
+  printf '| Python | %s |\n' "$pal_py"
+  printf '| JavaScript | %s |\n' "$pal_js"
+  printf '| C# | %s |\n\n' "$pal_cs"
+
+  if [[ "$coincide" == "si" ]]; then
+    printf '## Entropia en distintos formatos\n\n'
+    printf 'Para verificar a mano con herramientas externas (por ejemplo, un conversor de\n'
+    printf 'bases, o https://iancoleman.io/bip39/ pegando la entropia en hexadecimal).\n\n'
+    printf '| Formato | Valor |\n'
+    printf '|---|---|\n'
+    formatos_md "$hex_py"
+    printf '\n'
+  else
+    printf '## Entropia por implementacion (no coinciden)\n\n'
+    printf '### Python\n\n| Formato | Valor |\n|---|---|\n'
+    formatos_md "$hex_py"
+    printf '\n### JavaScript\n\n| Formato | Valor |\n|---|---|\n'
+    formatos_md "$hex_js"
+    printf '\n### C#\n\n| Formato | Valor |\n|---|---|\n'
+    formatos_md "$hex_cs"
+    printf '\n'
+  fi
+
+  printf -- '---\n'
+  printf 'Generado automaticamente por `comparar_implementaciones.sh`.\n'
+}
+
+echo "== Paso 2: comparacion cruzada con las mismas tiradas =="
+fallos=0
+for ((i = 1; i <= N_RONDAS; i++)); do
+  # 50 tiradas de un d6 (1-6), leidas de /dev/urandom: nada que instalar.
+  tiradas="$(od -An -tu1 -N50 /dev/urandom \
+             | tr -s ' \n' '\n' | grep -v '^$' \
+             | awk '{print ($1 % 6) + 1}' | tr '\n' ' ')"
+
+  salida_py="$(printf '%s\n' "$tiradas" | python3 "$PY")"
+  salida_js="$(printf '%s\n' "$tiradas" | node "$JS")"
+  salida_cs="$(printf '%s\n' "$tiradas" | cs_run)"
+
+  r_py="$(extraer "$salida_py")"
+  r_js="$(extraer "$salida_js")"
+  r_cs="$(extraer "$salida_cs")"
+
+  hex_py="${r_py%%|*}"; pal_py="${r_py#*|}"
+  hex_js="${r_js%%|*}"; pal_js="${r_js#*|}"
+  hex_cs="${r_cs%%|*}"; pal_cs="${r_cs#*|}"
+
+  if [[ "$r_py" == "$r_js" && "$r_js" == "$r_cs" ]]; then
+    coincide="si"
+    informe="$INFORMES/${hex_py}.md"
+  else
+    coincide="no"
+    fallos=$((fallos + 1))
+    informe="$INFORMES/${hex_py}_DESAJUSTE.md"
+  fi
+
+  generar_informe "$i" "$tiradas" "$coincide" \
+    "$hex_py" "$pal_py" "$hex_js" "$pal_js" "$hex_cs" "$pal_cs" > "$informe"
+
+  if [[ "$coincide" == "si" ]]; then
+    echo "ronda $i: OK  (entropia $hex_py) -> ${informe#"$ROOT"/}"
+  else
+    echo "ronda $i: FALLO -> ${informe#"$ROOT"/}"
+    echo "  tiradas : $tiradas"
+    echo "  python  : $r_py"
+    echo "  node    : $r_js"
+    echo "  csharp  : $r_cs"
+  fi
+done
+
+echo
+if [[ $fallos -eq 0 ]]; then
+  echo "OK: $N_RONDAS rondas, las 3 implementaciones coincidieron siempre."
+  echo "Informes en: $INFORMES"
+  exit 0
+else
+  echo "FALLO: $fallos de $N_RONDAS rondas no coincidieron."
+  echo "Informes en: $INFORMES"
+  exit 1
+fi
+</script>
+
 <script>
 /* ---------- idioma ---------- */
 function setLang(l){
@@ -2801,8 +3300,94 @@ const es = function(){ return document.documentElement.getAttribute('data-lang')
 const HASHES = {
   'bip39_dados.py':'66d9f0b42288760e7f228e59ffa4e51f1fc9fa509b36f5f1900aedb1fab02d20',
   'bip39_dados.js':'19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9',
-  'bip39_dados.cs':'de49a113e47e2afbaf3649abb2a01102618c4027521e4022bf92de11d082a726'
+  'bip39_dados.cs':'de49a113e47e2afbaf3649abb2a01102618c4027521e4022bf92de11d082a726',
+  'comparar_implementaciones.sh':'9d0a7c26e24c09dba90ac68e236437695c947418efb9765872e4e932ecdb84d7'
 };
+
+/* ---------- resaltado de sintaxis ----------
+   Distingue tres cosas: comentario, cadena de texto y código. No colorea
+   palabras clave: aquí lo que importa es separar lo que el programa HACE de
+   lo que el programa EXPLICA, porque estos ficheros son en buena parte
+   documentación.
+
+   Recorre el texto carácter a carácter en vez de aplicar expresiones
+   regulares sueltas. Es la diferencia entre acertar y fallar en los casos
+   que de verdad aparecen en estos ficheros: la lista de 2048 palabras vive
+   dentro de una cadena literal en los tres lenguajes, y un '#' dentro de
+   ${var#patron} no abre ningún comentario. */
+function escaparHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function resaltar(txt, tipo){
+  const py = tipo==='py', sh = tipo==='sh', cs = tipo==='cs', js = tipo==='js';
+  const marca = (py||sh) ? '#' : '//';
+  const salida = [];
+  let buf = [], i = 0;
+
+  const vuelca = function(){ if (buf.length){ salida.push(escaparHtml(buf.join(''))); buf = []; } };
+  const emite  = function(clase, s){
+    vuelca(); salida.push('<span class="'+clase+'">'+escaparHtml(s)+'</span>');
+  };
+
+  while (i < txt.length){
+    const c = txt[i];
+
+    /* Comentario de línea. En Python y shell el '#' solo abre comentario al
+       principio de línea o tras un espacio, para no romper ${var#patron}. */
+    if (txt.startsWith(marca, i) && (!(py||sh) || i === 0 || /\s/.test(txt[i-1]))){
+      let j = txt.indexOf('\n', i); if (j < 0) j = txt.length;
+      emite('c', txt.slice(i, j)); i = j; continue;
+    }
+
+    /* Comentario de bloque, solo en JavaScript y C#. */
+    if ((js||cs) && txt.startsWith('/*', i)){
+      let j = txt.indexOf('*/', i + 2); j = j < 0 ? txt.length : j + 2;
+      emite('c', txt.slice(i, j)); i = j; continue;
+    }
+
+    /* Cadena literal de C#: @"..." ocupa varias líneas y escapa las comillas
+       duplicándolas. Ahí es donde vive la lista de palabras. */
+    if (cs && txt.startsWith('@"', i)){
+      let j = i + 2;
+      while (j < txt.length){
+        if (txt[j] === '"'){ if (txt[j+1] === '"'){ j += 2; continue; } j++; break; }
+        j++;
+      }
+      emite('s', txt.slice(i, j)); i = j; continue;
+    }
+
+    /* Docstring de Python. */
+    if (py && (txt.startsWith('"""', i) || txt.startsWith("'''", i))){
+      const d = txt.substr(i, 3);
+      let j = txt.indexOf(d, i + 3); j = j < 0 ? txt.length : j + 3;
+      emite('d', txt.slice(i, j)); i = j; continue;
+    }
+
+    /* Cadena normal. El acento grave solo delimita en JavaScript; en shell
+       es sustitución de comandos, no una cadena. */
+    if (c === '"' || c === "'" || (js && c === '`')){
+      let j = i + 1;
+      while (j < txt.length){
+        if (txt[j] === '\\'){ j += 2; continue; }
+        if (txt[j] === c){ j++; break; }
+        if (txt[j] === '\n' && c !== '`'){ break; }   // sin cerrar: no arrastra
+        j++;
+      }
+      emite('s', txt.slice(i, j)); i = j; continue;
+    }
+
+    buf.push(c); i++;
+  }
+  vuelca();
+  return salida.join('');
+}
+
+/* La extensión del fichero decide las reglas. */
+function tipoDe(fichero){
+  const ext = fichero.split('.').pop();
+  return ext === 'py' || ext === 'js' || ext === 'cs' || ext === 'sh' ? ext : '';
+}
 
 /* El HTML obliga a un salto de línea tras la etiqueta de apertura; se quita
    para recuperar el fichero byte a byte. */
@@ -2820,7 +3405,14 @@ function descargar(fichero){
 function verCodigo(fichero){
   const txt = fuente(fichero);
   document.getElementById('vname').textContent = fichero;
-  document.getElementById('vcode').textContent = txt;
+
+  /* El coloreado es solo presentación: el SHA-256 de abajo se calcula sobre
+     'txt', el texto crudo, nunca sobre el HTML resaltado. */
+  const tipo = tipoDe(fichero);
+  const vcode = document.getElementById('vcode');
+  if (tipo) vcode.innerHTML = resaltar(txt, tipo);
+  else      vcode.textContent = txt;
+
   viewer.classList.add('open');
   viewer.scrollIntoView({block:'nearest'});
 

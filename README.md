@@ -46,13 +46,16 @@ La web incluye una lista de comprobación completa.
 ## Empezar rápido
 
 ```bash
+cd scripts/python
 python3 bip39_dados.py --test      # comprobar contra los vectores oficiales
 python3 bip39_dados.py             # pedir las 50 tiradas
 python3 bip39_dados.py --detalle   # mostrar todos los pasos intermedios
 ```
 
-Equivalentes: `node bip39_dados.js`. Para C#, las instrucciones de compilación
-están en la cabecera de `bip39_dados.cs`.
+Equivalentes: `node scripts/javascript/bip39_dados.js`. Para C#, las
+instrucciones de compilación están en `scripts/csharp/INSTRUCCIONES.md` (y en
+la cabecera de `bip39_dados.cs`). Cada carpeta de `scripts/` incluye además un
+`REQUISITOS.md` con lo necesario para ejecutarla.
 
 El modo `--detalle` imprime N, el recorte a 128 bits, el checksum y los 12 grupos
 de bits. Es para **aprender y enseñar**, no para generar una semilla real.
@@ -150,9 +153,12 @@ esperadas, aun así menos que 77).
 
 | Fichero | Qué es |
 |---|---|
-| `bip39_dados.py` | Implementación en Python 3 |
-| `bip39_dados.js` | Implementación en Node.js |
-| `bip39_dados.cs` | Implementación en C# / .NET |
+| `scripts/python/bip39_dados.py` | Implementación en Python 3 |
+| `scripts/javascript/bip39_dados.js` | Implementación en Node.js |
+| `scripts/csharp/bip39_dados.cs` | Implementación en C# / .NET |
+| `scripts/*/REQUISITOS.md` | Qué necesitas instalado para cada lenguaje |
+| `scripts/*/INSTRUCCIONES.md` | Cómo compilar y lanzar cada implementación |
+| `scripts/comparar_implementaciones.sh` | Comprueba que las tres dan las mismas palabras con las mismas tiradas |
 | `index.html` | Web didáctica bilingüe, autocontenida |
 | `tutorial_bip39_dados.md` | Tutorial largo con el código explicado |
 | `FIRMAR.md` | Cómo se firma y se verifica este repositorio |
@@ -211,13 +217,16 @@ The site has a full checklist.
 ## Quick start
 
 ```bash
+cd scripts/python
 python3 bip39_dados.py --test      # check against the official vectors
 python3 bip39_dados.py             # prompt for the 50 rolls
 python3 bip39_dados.py --detalle   # print every intermediate value
 ```
 
-Equivalents: `node bip39_dados.js`. For C#, build instructions are in the header
-of `bip39_dados.cs`.
+Equivalents: `node scripts/javascript/bip39_dados.js`. For C#, build
+instructions are in `scripts/csharp/INSTRUCCIONES.md` (and in the header of
+`bip39_dados.cs`). Each folder under `scripts/` also ships a `REQUISITOS.md`
+with what you need installed to run it.
 
 `--detalle` prints N, the trim to 128 bits, the checksum and the 12 bit groups.
 It's for **learning and teaching**, not for generating a real seed.
@@ -314,9 +323,12 @@ rolls, still fewer than 77).
 
 | File | What it is |
 |---|---|
-| `bip39_dados.py` | Python 3 implementation |
-| `bip39_dados.js` | Node.js implementation |
-| `bip39_dados.cs` | C# / .NET implementation |
+| `scripts/python/bip39_dados.py` | Python 3 implementation |
+| `scripts/javascript/bip39_dados.js` | Node.js implementation |
+| `scripts/csharp/bip39_dados.cs` | C# / .NET implementation |
+| `scripts/*/REQUISITOS.md` | What you need installed for each language |
+| `scripts/*/INSTRUCCIONES.md` | How to build and run each implementation |
+| `scripts/comparar_implementaciones.sh` | Checks that all three give the same words for the same rolls |
 | `index.html` | Bilingual teaching site, self-contained |
 | `tutorial_bip39_dados.md` | Long-form tutorial (Spanish) |
 | `FIRMAR.md` | How this repository is signed and verified (Spanish) |
