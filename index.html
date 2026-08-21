@@ -5,30 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>dice-seed · BIP-39 con dados</title>
 <meta name="description" content="Aprende cómo se construye una semilla BIP-39 de 12 palabras a partir de 50 tiradas de dado, y usa scripts firmados y auditables para hacerlo tú mismo.">
+<meta name="theme-color" content="#FFFFFF">
 <style>
 :root{
-  --felt-900:#0B1F19; --felt-800:#10281F; --felt-700:#17342A;
-  --felt-600:#204236; --felt-500:#2C5748;
-  --bone:#E9E3D5; --bone-dim:#9DB0A5; --bone-faint:#6E877B;
-  --cherry:#D9453C; --brass:#D7A93E;
+  --bg:#FFFFFF; --surface:#F7F8FA; --surface-2:#EEF1F4;
+  --line:#E2E6EB; --line-strong:#C7CED6;
+  --ink:#12171C; --ink-dim:#4A5560; --ink-faint:#75818D;
+  --orange:#F7931A; --orange-ink:#B45309; --red:#C0392B;
+  --code-bg:#141A1F; --code-ink:#E6EAEE;
+  --syn-comment:#8FA3AF; --syn-string:#E8A33D;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --measure:68ch;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth; color-scheme:light}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
 body{
-  margin:0; background:var(--felt-800); color:var(--bone);
+  margin:0; background:var(--bg); color:var(--ink);
   font-family:var(--sans); font-size:17px; line-height:1.65;
   -webkit-font-smoothing:antialiased;
 }
-/* Textura de tapete, muy sutil */
-body::before{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.55;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-main,header,footer{position:relative; z-index:1}
 
 /* ---------- idioma ---------- */
 html[data-lang="es"] [data-l="en"]{display:none}
@@ -37,111 +34,111 @@ html[data-lang="en"] [data-l="es"]{display:none}
 /* ---------- tipografía ---------- */
 h1,h2,h3,.eyebrow,.lede-num{font-family:var(--mono); font-weight:600}
 h2{font-size:clamp(1.5rem,3.4vw,2.1rem); line-height:1.15; letter-spacing:-.01em; margin:0 0 .6rem}
-h3{font-size:1.06rem; letter-spacing:.02em; margin:2.2rem 0 .5rem; color:var(--brass)}
+h3{font-size:1.06rem; letter-spacing:.02em; margin:2.2rem 0 .5rem; color:var(--orange-ink)}
 p{margin:0 0 1.1rem; max-width:var(--measure)}
 ul,ol{max-width:var(--measure); padding-left:1.2rem}
 li{margin:.35rem 0}
-a{color:var(--brass); text-underline-offset:3px; text-decoration-thickness:1px}
-a:hover{color:var(--bone)}
-:focus-visible{outline:2px solid var(--brass); outline-offset:3px; border-radius:2px}
-code,kbd{font-family:var(--mono); font-size:.88em; background:var(--felt-900); padding:.12em .38em; border-radius:3px; color:var(--brass)}
-strong{color:#fff}
-.eyebrow{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--bone-faint); display:block; margin-bottom:.5rem}
+a{color:var(--orange-ink); text-underline-offset:3px; text-decoration-thickness:1px}
+a:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--orange-ink); outline-offset:3px; border-radius:2px}
+code,kbd{font-family:var(--mono); font-size:.88em; background:var(--surface-2); padding:.12em .38em; border-radius:3px; color:var(--orange-ink)}
+strong{color:var(--ink)}
+.eyebrow{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint); display:block; margin-bottom:.5rem}
 
 /* ---------- estructura ---------- */
 .wrap{max-width:1040px; margin:0 auto; padding:0 clamp(1.1rem,4vw,2.5rem)}
-section{padding:clamp(3.2rem,8vw,5.5rem) 0; border-top:1px solid var(--felt-600)}
+section{padding:clamp(3.2rem,8vw,5.5rem) 0; border-top:1px solid var(--line)}
 section:first-of-type{border-top:0}
 
 /* ---------- barra superior ---------- */
-header{position:sticky; top:0; z-index:20; background:rgba(11,31,25,.93); backdrop-filter:blur(8px); border-bottom:1px solid var(--felt-600)}
+header{position:sticky; top:0; z-index:20; background:rgba(255,255,255,.88); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
 .bar{display:flex; align-items:center; gap:1rem; padding:.7rem 0; max-width:1040px; margin:0 auto; padding-inline:clamp(1.1rem,4vw,2.5rem)}
 .brand{font-family:var(--mono); font-weight:600; letter-spacing:.04em; font-size:.95rem; margin-right:auto}
 .bar{gap:.7rem}
 @media(min-width:860px){.bar{gap:1.1rem}}
-.brand span{color:var(--brass)}
+.brand span{color:var(--orange-ink)}
 nav.jump{display:none; gap:1.1rem; font-family:var(--mono); font-size:.78rem; letter-spacing:.06em}
 @media(min-width:860px){nav.jump{display:flex}}
-nav.jump a{color:var(--bone-dim); text-decoration:none}
-nav.jump a:hover{color:var(--brass)}
+nav.jump a{color:var(--ink-dim); text-decoration:none}
+nav.jump a:hover{color:var(--orange-ink)}
 .dlcta{
   font-family:var(--mono); font-size:.72rem; letter-spacing:.09em; text-transform:uppercase;
-  color:var(--brass); text-decoration:none; border:1px solid var(--brass);
+  color:var(--orange-ink); text-decoration:none; border:1px solid var(--orange-ink);
   border-radius:999px; padding:.36rem .8rem; white-space:nowrap; transition:background .15s,color .15s;
 }
-.dlcta:hover,.dlcta:focus-visible{background:var(--brass); color:var(--felt-900); font-weight:700}
+.dlcta:hover,.dlcta:focus-visible{background:var(--orange); color:var(--ink); font-weight:700}
 .dlcta .full{display:none}
 @media(min-width:560px){.dlcta .full{display:inline}}
-.langtog{display:flex; border:1px solid var(--felt-500); border-radius:999px; overflow:hidden; font-family:var(--mono); font-size:.72rem}
-.langtog button{background:none; border:0; color:var(--bone-dim); padding:.32rem .62rem; cursor:pointer; font:inherit; letter-spacing:.08em}
-.langtog button[aria-pressed="true"]{background:var(--brass); color:var(--felt-900); font-weight:700}
+.langtog{display:flex; border:1px solid var(--line-strong); border-radius:999px; overflow:hidden; font-family:var(--mono); font-size:.72rem}
+.langtog button{background:none; border:0; color:var(--ink-dim); padding:.32rem .62rem; cursor:pointer; font:inherit; letter-spacing:.08em}
+.langtog button[aria-pressed="true"]{background:var(--orange); color:var(--ink); font-weight:700}
 
 /* ---------- dados (motivo estructural) ---------- */
-.die{width:38px; height:38px; flex:0 0 38px; border-radius:7px; background:var(--bone);
+.die{width:38px; height:38px; flex:0 0 38px; border-radius:7px; background:var(--bg);
      display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr); padding:5px; gap:2px;
-     box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 -2px 3px rgba(0,0,0,.12)}
-.die i{border-radius:50%; background:var(--felt-900); width:6px; height:6px; align-self:center; justify-self:center}
+     border:1.5px solid var(--line-strong); box-shadow:0 1px 2px rgba(18,23,28,.10)}
+.die i{border-radius:50%; background:var(--ink); width:6px; height:6px; align-self:center; justify-self:center}
 .die i.c1{grid-area:1/1}.die i.c2{grid-area:1/2}.die i.c3{grid-area:1/3}
 .die i.c4{grid-area:2/1}.die i.c5{grid-area:2/2}.die i.c6{grid-area:2/3}
 .die i.c7{grid-area:3/1}.die i.c8{grid-area:3/2}.die i.c9{grid-area:3/3}
-.die.red{background:var(--cherry)} .die.red i{background:#fff}
+.die.accent{background:var(--orange); border-color:var(--orange)} .die.accent i{background:var(--ink)}
 
 /* ---------- héroe ---------- */
 .hero{padding-top:clamp(3rem,9vw,6rem); padding-bottom:clamp(2.5rem,7vw,4.5rem)}
 .hero h1{font-size:clamp(2.05rem,6.4vw,3.9rem); line-height:1.03; letter-spacing:-.03em; margin:0 0 1.3rem; max-width:16ch}
-.hero h1 em{font-style:normal; color:var(--brass)}
-.hero .sub{font-size:clamp(1.02rem,2.1vw,1.2rem); color:var(--bone-dim); max-width:56ch}
+.hero h1 em{font-style:normal; color:var(--orange-ink)}
+.hero .sub{font-size:clamp(1.02rem,2.1vw,1.2rem); color:var(--ink-dim); max-width:56ch}
 .dicerow{display:flex; gap:.5rem; margin-bottom:1.8rem; flex-wrap:wrap}
 .arrowline{display:flex; align-items:center; gap:.9rem; flex-wrap:wrap; margin:2.2rem 0 0;
-  font-family:var(--mono); font-size:.82rem; letter-spacing:.06em; color:var(--bone-faint)}
-.arrowline b{color:var(--bone); font-weight:600}
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.06em; color:var(--ink-faint)}
+.arrowline b{color:var(--ink); font-weight:600}
 
 /* ---------- avisos ---------- */
-.note{border-left:3px solid var(--brass); background:var(--felt-700); padding:1rem 1.2rem; margin:1.6rem 0; max-width:var(--measure); border-radius:0 5px 5px 0}
-.note.warn{border-left-color:var(--cherry)}
+.note{border-left:3px solid var(--orange); background:var(--surface); padding:1rem 1.2rem; margin:1.6rem 0; max-width:var(--measure); border-radius:0 5px 5px 0}
+.note.warn{border-left-color:var(--red)}
 .note p:last-child{margin-bottom:0}
-.note .tag{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); display:block; margin-bottom:.4rem}
-.note.warn .tag{color:var(--cherry)}
+.note .tag{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--orange-ink); display:block; margin-bottom:.4rem}
+.note.warn .tag{color:var(--red)}
 
 /* ---------- pasos ---------- */
 .step{display:grid; grid-template-columns:38px 1fr; gap:1.1rem; margin:0 0 2.6rem; align-items:start}
 .step .body{min-width:0}
-.step h3{margin:.1rem 0 .5rem; color:var(--bone); font-size:1.14rem; letter-spacing:0}
-.calc{font-family:var(--mono); font-size:.84rem; background:var(--felt-900); border:1px solid var(--felt-600);
-      border-radius:6px; padding:.85rem 1rem; overflow-x:auto; white-space:pre; color:var(--bone-dim); margin:.9rem 0; line-height:1.55}
-.calc b{color:var(--brass); font-weight:600}
+.step h3{margin:.1rem 0 .5rem; color:var(--ink); font-size:1.14rem; letter-spacing:0}
+.calc{font-family:var(--mono); font-size:.84rem; background:var(--surface-2); border:1px solid var(--line);
+      border-radius:6px; padding:.85rem 1rem; overflow-x:auto; white-space:pre; color:var(--ink-dim); margin:.9rem 0; line-height:1.55}
+.calc b{color:var(--orange-ink); font-weight:600}
 
 /* ---------- firma visual: el partidor de bits ---------- */
-.splitter{background:var(--felt-900); border:1px solid var(--felt-600); border-radius:8px; padding:1.3rem; margin:1.6rem 0}
+.splitter{background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:1.3rem; margin:1.6rem 0}
 .bitstring{font-family:var(--mono); font-size:.78rem; line-height:2.1; word-break:break-all; letter-spacing:.06em}
 .grp{padding:.16em .1em; border-radius:3px; transition:background .12s, color .12s; cursor:default}
-.grp:nth-child(odd){background:rgba(215,169,62,.10)}
-.grp:nth-child(even){background:rgba(233,227,213,.06)}
-.grp.on{background:var(--brass); color:var(--felt-900); font-weight:700}
-.grp.ck{outline:1px dashed var(--cherry); outline-offset:1px}
+.grp:nth-child(odd){background:rgba(247,147,26,.14)}
+.grp:nth-child(even){background:rgba(18,23,28,.055)}
+.grp.on{background:var(--orange); color:var(--ink); font-weight:700}
+.grp.ck{outline:1px dashed var(--red); outline-offset:1px}
 .wordgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:.4rem; margin-top:1.2rem}
 .wcell{display:flex; align-items:baseline; gap:.5rem; font-family:var(--mono); font-size:.82rem;
-       padding:.4rem .55rem; border-radius:5px; border:1px solid var(--felt-600); background:var(--felt-800); cursor:default}
-.wcell:hover,.wcell.on{border-color:var(--brass); background:var(--felt-700)}
-.wcell .i{color:var(--bone-faint); font-size:.72rem; min-width:1.4em}
-.wcell .w{color:var(--bone); font-weight:600}
-.wcell .x{color:var(--bone-faint); font-size:.72rem; margin-left:auto}
+       padding:.4rem .55rem; border-radius:5px; border:1px solid var(--line); background:var(--surface); cursor:default}
+.wcell:hover,.wcell.on{border-color:var(--orange); background:var(--surface-2)}
+.wcell .i{color:var(--ink-faint); font-size:.72rem; min-width:1.4em}
+.wcell .w{color:var(--ink); font-weight:600}
+.wcell .x{color:var(--ink-faint); font-size:.72rem; margin-left:auto}
 
 /* ---------- tablas ---------- */
 .tbl{width:100%; border-collapse:collapse; margin:1.3rem 0; font-size:.92rem; display:block; overflow-x:auto; white-space:nowrap}
-.tbl th,.tbl td{text-align:left; padding:.6rem .9rem; border-bottom:1px solid var(--felt-600)}
-.tbl th{font-family:var(--mono); font-size:.72rem; letter-spacing:.13em; text-transform:uppercase; color:var(--bone-faint); font-weight:600}
-.tbl td:first-child{color:var(--bone-dim)}
-.tbl .good{color:var(--brass)} .tbl .bad{color:var(--cherry)}
+.tbl th,.tbl td{text-align:left; padding:.6rem .9rem; border-bottom:1px solid var(--line)}
+.tbl th{font-family:var(--mono); font-size:.72rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-faint); font-weight:600}
+.tbl td:first-child{color:var(--ink-dim)}
+.tbl .good{color:var(--orange-ink)} .tbl .bad{color:var(--red)}
 
 /* ---------- pros y contras ---------- */
 .cols{display:grid; gap:1.4rem; margin-top:1.2rem}
 @media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
-.card{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.3rem 1.4rem}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:1.3rem 1.4rem; box-shadow:0 1px 2px rgba(18,23,28,.06)}
 .card h3{margin-top:0}
 .card ul{margin:0; padding-left:1.1rem; max-width:none}
-.card li::marker{color:var(--bone-faint)}
-.card.pro h3{color:var(--brass)} .card.con h3{color:var(--cherry)}
+.card li::marker{color:var(--ink-faint)}
+.card.pro h3{color:var(--orange-ink)} .card.con h3{color:var(--red)}
 
 /* ---------- scripts ---------- */
 .scripts{display:grid; gap:1rem; margin-top:1.4rem}
@@ -149,61 +146,61 @@ nav.jump a:hover{color:var(--brass)}
 /* min-width:0 en la tarjeta y en el bloque de comandos: sin ellos, las
    líneas largas de los comandos ensanchan la columna del grid y la página
    entera acaba con scroll horizontal, en vez de scrollar solo el código. */
-.sc{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.2rem; display:flex; flex-direction:column; min-width:0}
+.sc{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:1.2rem; display:flex; flex-direction:column; min-width:0; box-shadow:0 1px 2px rgba(18,23,28,.06)}
 .sc > *{min-width:0}
-.sc h3{margin:0 0 .5rem; color:var(--bone); font-size:1.05rem}
-.sc p{font-size:.9rem; color:var(--bone-dim); margin-bottom:1rem; max-width:none}
+.sc h3{margin:0 0 .5rem; color:var(--ink); font-size:1.05rem}
+.sc p{font-size:.9rem; color:var(--ink-dim); margin-bottom:1rem; max-width:none}
 .sc .acts{margin-top:auto; display:flex; gap:.5rem; flex-wrap:wrap}
 .btn{font-family:var(--mono); font-size:.76rem; letter-spacing:.07em; text-transform:uppercase;
-     border:1px solid var(--felt-500); background:none; color:var(--bone); padding:.5rem .8rem;
+     border:1px solid var(--line-strong); background:none; color:var(--ink); padding:.5rem .8rem;
      border-radius:5px; cursor:pointer; text-decoration:none; display:inline-block}
-.btn:hover{border-color:var(--brass); color:var(--brass)}
-.btn.solid{background:var(--brass); border-color:var(--brass); color:var(--felt-900); font-weight:700}
-.btn.solid:hover{background:var(--bone); border-color:var(--bone); color:var(--felt-900)}
-.hashline{font-family:var(--mono); font-size:.68rem; color:var(--bone-faint); word-break:break-all; margin-top:.8rem; line-height:1.5}
+.btn:hover{border-color:var(--orange-ink); color:var(--orange-ink)}
+.btn.solid{background:var(--orange); border-color:var(--orange); color:var(--ink); font-weight:700}
+.btn.solid:hover{background:var(--orange-ink); border-color:var(--orange-ink); color:var(--bg)}
+.hashline{font-family:var(--mono); font-size:.68rem; color:var(--ink-faint); word-break:break-all; margin-top:.8rem; line-height:1.5}
 
 /* bloques de requisitos e instrucciones dentro de cada tarjeta */
 .lab{font-family:var(--mono); font-size:.63rem; letter-spacing:.17em; text-transform:uppercase;
-     color:var(--bone-faint); display:block; margin-bottom:.45rem}
-.reqs{list-style:none; margin:0 0 1.1rem; padding:0; font-size:.83rem; color:var(--bone-dim); max-width:none}
+     color:var(--ink-faint); display:block; margin-bottom:.45rem}
+.reqs{list-style:none; margin:0 0 1.1rem; padding:0; font-size:.83rem; color:var(--ink-dim); max-width:none}
 .reqs li{margin:.25rem 0; padding-left:1.1rem; position:relative; line-height:1.5}
-.reqs li::before{content:"›"; position:absolute; left:.1rem; color:var(--brass)}
-.reqs li b{color:var(--bone); font-weight:600}
-.run{font-family:var(--mono); font-size:.735rem; line-height:1.75; background:var(--felt-900);
-     border:1px solid var(--felt-600); border-radius:6px; padding:.75rem .85rem; margin:0 0 1.1rem;
-     overflow-x:auto; white-space:pre; color:var(--bone)}
-.run .cm{color:#6F9280}
-.run .hd{color:var(--brass); font-weight:600}
+.reqs li::before{content:"›"; position:absolute; left:.1rem; color:var(--orange-ink)}
+.reqs li b{color:var(--ink); font-weight:600}
+.run{font-family:var(--mono); font-size:.735rem; line-height:1.75; background:var(--code-bg);
+     border:1px solid var(--line); border-radius:6px; padding:.75rem .85rem; margin:0 0 1.1rem;
+     overflow-x:auto; white-space:pre; color:var(--code-ink)}
+.run .cm{color:var(--syn-comment)}
+.run .hd{color:var(--orange); font-weight:600}
 
 /* visor */
-.viewer{margin-top:1.6rem; border:1px solid var(--felt-600); border-radius:8px; overflow:hidden; display:none}
+.viewer{margin-top:1.6rem; border:1px solid var(--line); border-radius:8px; overflow:hidden; display:none}
 .viewer.open{display:block}
-.vhead{display:flex; align-items:center; gap:.8rem; padding:.6rem .9rem; background:var(--felt-700); border-bottom:1px solid var(--felt-600); font-family:var(--mono); font-size:.78rem}
-.vhead .name{color:var(--brass)}
-.vhead #vstatus{color:var(--bone-faint); font-size:.72rem; letter-spacing:.02em}
-.vhead #vstatus.ok{color:var(--brass)}
-.vhead #vstatus.bad{color:var(--cherry); font-weight:700}
+.vhead{display:flex; align-items:center; gap:.8rem; padding:.6rem .9rem; background:var(--surface); border-bottom:1px solid var(--line); font-family:var(--mono); font-size:.78rem}
+.vhead .name{color:var(--orange-ink)}
+.vhead #vstatus{color:var(--ink-faint); font-size:.72rem; letter-spacing:.02em}
+.vhead #vstatus.ok{color:var(--orange-ink)}
+.vhead #vstatus.bad{color:var(--red); font-weight:700}
 .vhead button{margin-left:auto}
 /* leyenda de colores del visor. Por debajo de 760px se oculta y el botón
    recupera el margen automático que lo empuja a la derecha. */
-.leyenda{display:none; gap:.85rem; font-size:.7rem; color:var(--bone-faint); letter-spacing:.02em}
+.leyenda{display:none; gap:.85rem; font-size:.7rem; color:var(--ink-faint); letter-spacing:.02em}
 .leyenda span{display:inline-flex; align-items:center; gap:.32rem}
 .leyenda i{width:.62rem; height:.62rem; border-radius:2px; display:inline-block}
-.leyenda .k-x{background:var(--bone)} .leyenda .k-c{background:#6F9280} .leyenda .k-s{background:#C7A25E}
+.leyenda .k-x{background:var(--code-ink)} .leyenda .k-c{background:var(--syn-comment)} .leyenda .k-s{background:var(--syn-string)}
 @media(min-width:760px){
   .leyenda{display:flex; margin-left:auto}
   .vhead .leyenda ~ button{margin-left:0}
 }
 
-pre.code{margin:0; padding:1rem; background:var(--felt-900); overflow:auto; max-height:60vh;
-         font-family:var(--mono); font-size:.74rem; line-height:1.6; color:var(--bone); white-space:pre}
+pre.code{margin:0; padding:1rem; background:var(--code-bg); overflow:auto; max-height:60vh;
+         font-family:var(--mono); font-size:.74rem; line-height:1.6; color:var(--code-ink); white-space:pre}
 /* resaltado: comentario · docstring · cadena. El resto queda en color código. */
-pre.code .c,pre.code .d{color:#6F9280}
-pre.code .s{color:#C7A25E}
+pre.code .c,pre.code .d{color:var(--syn-comment)}
+pre.code .s{color:var(--syn-string)}
 
 /* ---------- herramienta de comprobación cruzada ---------- */
-.tool{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px;
-      padding:1.4rem 1.5rem; margin-top:1.3rem}
+.tool{background:var(--surface); border:1px solid var(--line); border-radius:8px;
+      padding:1.4rem 1.5rem; margin-top:1.3rem; box-shadow:0 1px 2px rgba(18,23,28,.06)}
 .tool > h3:first-child{margin-top:0; margin-bottom:1.1rem}
 .tool .lab{margin-top:1.5rem}
 .tool > h3:first-child + .lab{margin-top:0}
@@ -216,10 +213,10 @@ pre.code .s{color:#C7A25E}
 /* qué contiene el informe */
 .fields{display:grid; gap:.5rem; margin:1rem 0 1.2rem; max-width:var(--measure)}
 .field{display:grid; grid-template-columns:9.5rem 1fr; gap:.7rem; align-items:baseline;
-       font-family:var(--mono); font-size:.74rem; background:var(--felt-900);
-       border:1px solid var(--felt-600); border-radius:5px; padding:.5rem .7rem}
-.field b{color:var(--brass); font-weight:600; letter-spacing:.02em}
-.field span{color:var(--bone-dim); word-break:break-all}
+       font-family:var(--mono); font-size:.74rem; background:var(--surface-2);
+       border:1px solid var(--line); border-radius:5px; padding:.5rem .7rem}
+.field b{color:var(--orange-ink); font-weight:600; letter-spacing:.02em}
+.field span{color:var(--ink-dim); word-break:break-all}
 @media(max-width:560px){.field{grid-template-columns:1fr; gap:.15rem}}
 
 /* ---------- checklist ---------- */
@@ -227,15 +224,14 @@ pre.code .s{color:#C7A25E}
 .check li{position:relative; padding-left:2.3rem; margin:0 0 1rem; line-height:1.6}
 .check li::before{
   content:""; position:absolute; left:0; top:.34em;
-  width:1.15rem; height:1.15rem; border:1.5px solid var(--brass);
-  border-radius:3px; background:var(--felt-900);
-  box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+  width:1.15rem; height:1.15rem; border:1.5px solid var(--orange);
+  border-radius:3px; background:var(--bg);
 }
 .check li:last-child{margin-bottom:0}
 
 /* ---------- pie ---------- */
-footer{border-top:1px solid var(--felt-600); padding:2.6rem 0 3.4rem; font-size:.87rem; color:var(--bone-dim)}
-footer .fp{font-family:var(--mono); font-size:.76rem; color:var(--bone); word-break:break-all; background:var(--felt-900); padding:.7rem .9rem; border-radius:5px; border:1px solid var(--felt-600); display:inline-block; margin:.4rem 0 1rem}
+footer{border-top:1px solid var(--line); padding:2.6rem 0 3.4rem; font-size:.87rem; color:var(--ink-dim)}
+footer .fp{font-family:var(--mono); font-size:.76rem; color:var(--code-ink); word-break:break-all; background:var(--code-bg); padding:.7rem .9rem; border-radius:5px; border:1px solid var(--line); display:inline-block; margin:.4rem 0 1rem}
 footer a{word-break:break-all}
 </style>
 </head>
@@ -265,7 +261,7 @@ footer a{word-break:break-all}
   <div class="dicerow" aria-hidden="true">
     <span class="die"><i class="c1"></i><i class="c3"></i><i class="c5"></i><i class="c7"></i><i class="c9"></i></span>
     <span class="die"><i class="c1"></i><i class="c9"></i></span>
-    <span class="die red"><i class="c5"></i></span>
+    <span class="die accent"><i class="c5"></i></span>
     <span class="die"><i class="c1"></i><i class="c3"></i><i class="c4"></i><i class="c6"></i><i class="c7"></i><i class="c9"></i></span>
     <span class="die"><i class="c1"></i><i class="c3"></i><i class="c7"></i><i class="c9"></i></span>
   </div>
@@ -354,8 +350,8 @@ byte 0x05 = 0000 0101
         <div class="eyebrow" data-l="en">Hover a group or a word</div>
         <div class="bitstring" id="bits"></div>
         <div class="wordgrid" id="words"></div>
-        <p style="font-size:.78rem;color:var(--bone-faint);margin:1rem 0 0;max-width:none" data-l="es">Los 4 últimos bits (recuadro rojo) son el checksum. Ejemplo público de demostración: <strong>nunca uses esta semilla</strong>.</p>
-        <p style="font-size:.78rem;color:var(--bone-faint);margin:1rem 0 0;max-width:none" data-l="en">The last 4 bits (red outline) are the checksum. Public demo example: <strong>never use this seed</strong>.</p>
+        <p style="font-size:.78rem;color:var(--ink-faint);margin:1rem 0 0;max-width:none" data-l="es">Los 4 últimos bits (recuadro rojo) son el checksum. Ejemplo público de demostración: <strong>nunca uses esta semilla</strong>.</p>
+        <p style="font-size:.78rem;color:var(--ink-faint);margin:1rem 0 0;max-width:none" data-l="en">The last 4 bits (red outline) are the checksum. Public demo example: <strong>never use this seed</strong>.</p>
       </div>
     </div>
   </div>
@@ -583,14 +579,14 @@ node bip39_dados.js --detalle</div>
     <h3 style="margin-top:0">comparar_implementaciones.sh</h3>
 
     <span class="lab" data-l="es">Qué hace, en orden</span><span class="lab" data-l="en">What it does, in order</span>
-    <ol data-l="es" style="font-size:.9rem;color:var(--bone-dim)">
+    <ol data-l="es" style="font-size:.9rem;color:var(--ink-dim)">
       <li>Lanza <code>--test</code> en las dos implementaciones: los vectores oficiales de BIP-39.</li>
       <li>Saca 50 tiradas al azar de <code>/dev/urandom</code>.</li>
       <li>Se las pasa a Python y Node por la entrada estándar, sin tocarlas.</li>
       <li>Compara la entropía y las 12 palabras de las dos. Si algo difiere, termina con error.</li>
       <li>Escribe un informe en <code>scripts/informes/</code>, uno por ronda.</li>
     </ol>
-    <ol data-l="en" style="font-size:.9rem;color:var(--bone-dim)">
+    <ol data-l="en" style="font-size:.9rem;color:var(--ink-dim)">
       <li>Runs <code>--test</code> on both implementations: the official BIP-39 vectors.</li>
       <li>Draws 50 random rolls from <code>/dev/urandom</code>.</li>
       <li>Feeds them to Python and Node on standard input, unmodified.</li>
@@ -762,10 +758,10 @@ ots verify SHA256SUMS.ots</div>
     <div class="fp">05E6 6020 81F7 AFD7 2957  36B4 D37C BA46 955B 9F95</div>
     <p>
       <a href="https://github.com/fotoshi/dice-seed">github.com/fotoshi/dice-seed</a><br>
-      <span style="font-size:.78rem;color:var(--bone-faint)">npub1gke055lhcwndepddgzl4gdcgy86h0g5vgsjsmtpl44mftt6zyn9s8wk7e5</span>
+      <span style="font-size:.78rem;color:var(--ink-faint)">npub1gke055lhcwndepddgzl4gdcgy86h0g5vgsjsmtpl44mftt6zyn9s8wk7e5</span>
     </p>
-    <p data-l="es" style="font-size:.82rem;color:var(--bone-faint)">Licencia MIT · Sin rastreadores, sin cookies, sin recursos externos. Esta página no se comunica con ningún servidor una vez cargada.</p>
-    <p data-l="en" style="font-size:.82rem;color:var(--bone-faint)">MIT licence · No trackers, no cookies, no external resources. This page talks to no server once loaded.</p>
+    <p data-l="es" style="font-size:.82rem;color:var(--ink-faint)">Licencia MIT · Sin rastreadores, sin cookies, sin recursos externos. Esta página no se comunica con ningún servidor una vez cargada.</p>
+    <p data-l="en" style="font-size:.82rem;color:var(--ink-faint)">MIT licence · No trackers, no cookies, no external resources. This page talks to no server once loaded.</p>
   </div>
 </footer>
 
