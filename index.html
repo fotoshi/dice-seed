@@ -145,9 +145,9 @@ nav.jump a:hover{color:var(--brass)}
 
 /* ---------- scripts ---------- */
 .scripts{display:grid; gap:1rem; margin-top:1.4rem}
-@media(min-width:820px){.scripts{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:820px){.scripts{grid-template-columns:repeat(2,1fr)}}
 /* min-width:0 en la tarjeta y en el bloque de comandos: sin ellos, las
-   líneas largas del ejemplo de C# ensanchan la columna del grid y la página
+   líneas largas de los comandos ensanchan la columna del grid y la página
    entera acaba con scroll horizontal, en vez de scrollar solo el código. */
 .sc{background:var(--felt-700); border:1px solid var(--felt-600); border-radius:8px; padding:1.2rem; display:flex; flex-direction:column; min-width:0}
 .sc > *{min-width:0}
@@ -391,14 +391,14 @@ byte 0x05 = 0000 0101
       <ul data-l="es">
         <li><strong>Aleatoriedad auditable.</strong> No dependes del generador de nadie. La ves caer sobre la mesa.</li>
         <li><strong>Verificable paso a paso.</strong> Cualquiera puede repetir el cálculo con lápiz y papel y llegar al mismo resultado.</li>
-        <li><strong>Sin dependencias.</strong> Los tres scripts usan solo la biblioteca estándar de su lenguaje. Nada que descargar, nada que pueda estar comprometido.</li>
+        <li><strong>Sin dependencias.</strong> Los dos scripts usan solo la biblioteca estándar de su lenguaje. Nada que descargar, nada que pueda estar comprometido.</li>
         <li><strong>Protege de un fallo concreto.</strong> Ha habido dispositivos con generadores rotos. Un dado no tiene firmware.</li>
         <li><strong>Se enseña.</strong> Al terminar entiendes de verdad qué es tu semilla, no solo que la tienes.</li>
       </ul>
       <ul data-l="en">
         <li><strong>Auditable randomness.</strong> You don't depend on anyone's generator. You watch it land on the table.</li>
         <li><strong>Verifiable step by step.</strong> Anyone can redo the calculation with pen and paper and reach the same result.</li>
-        <li><strong>No dependencies.</strong> All three scripts use only their language's standard library. Nothing to download, nothing that can be compromised.</li>
+        <li><strong>No dependencies.</strong> Both scripts use only their language's standard library. Nothing to download, nothing that can be compromised.</li>
         <li><strong>Guards against a real failure.</strong> Devices have shipped with broken generators. A die has no firmware.</li>
         <li><strong>It teaches.</strong> When you're done you actually understand what your seed is, not just that you have one.</li>
       </ul>
@@ -452,10 +452,10 @@ byte 0x05 = 0000 0101
 <!-- ══════════════ SCRIPTS ══════════════ -->
 <section id="scripts">
   <span class="eyebrow" data-l="es">Descarga y auditoría</span><span class="eyebrow" data-l="en">Download and audit</span>
-  <h2 data-l="es">Los tres scripts</h2>
-  <h2 data-l="en">The three scripts</h2>
-  <p data-l="es">La misma lógica en tres lenguajes. Elige el que ya tengas instalado, o el que sepas leer mejor: los tres están comentados paso a paso y producen resultados idénticos. Cada uno incluye <code>--test</code>, que comprueba los vectores oficiales de BIP-39, y <code>--detalle</code>, que imprime todos los valores intermedios.</p>
-  <p data-l="en">The same logic in three languages. Pick whichever you already have installed, or whichever you can read best: all three are commented step by step and produce identical results. Each includes <code>--test</code>, which checks the official BIP-39 vectors, and <code>--detalle</code>, which prints every intermediate value.</p>
+  <h2 data-l="es">Los dos scripts</h2>
+  <h2 data-l="en">The two scripts</h2>
+  <p data-l="es">La misma lógica en dos lenguajes. Elige el que ya tengas instalado, o el que sepas leer mejor: los dos están comentados paso a paso y producen resultados idénticos. Cada uno incluye <code>--test</code>, que comprueba los vectores oficiales de BIP-39, y <code>--detalle</code>, que imprime todos los valores intermedios.</p>
+  <p data-l="en">The same logic in two languages. Pick whichever you already have installed, or whichever you can read best: both are commented step by step and produce identical results. Each includes <code>--test</code>, which checks the official BIP-39 vectors, and <code>--detalle</code>, which prints every intermediate value.</p>
 
   <div class="scripts">
     <div class="sc">
@@ -543,55 +543,6 @@ node bip39_dados.js --detalle</div>
       </div>
       <div class="hashline">19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9</div>
     </div>
-
-    <div class="sc">
-      <h3>C#</h3>
-      <p data-l="es">Para entornos Windows. Se compila a un ejecutable, útil si prefieres no instalar un intérprete en la máquina sin red.</p>
-      <p data-l="en">For Windows environments. It compiles to an executable, useful if you'd rather not install an interpreter on the offline machine.</p>
-
-      <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
-      <ul class="reqs" data-l="es">
-        <li><b>.NET 6+</b>, <b>Mono</b> o <b>.NET Framework 4.6</b></li>
-        <li>Compila con <code>-langversion:6</code> (C# de 2015)</li>
-        <li>Sin paquetes NuGet</li>
-      </ul>
-      <ul class="reqs" data-l="en">
-        <li><b>.NET 6+</b>, <b>Mono</b> or <b>.NET Framework 4.6</b></li>
-        <li>Builds with <code>-langversion:6</code> (C# from 2015)</li>
-        <li>No NuGet packages</li>
-      </ul>
-
-      <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
-      <div class="run" data-l="es"><span class="hd"># .NET 6 o superior</span>
-dotnet new console -o bip39
-cp bip39_dados.cs \
-   bip39/Program.cs
-cd bip39
-dotnet run -- --test
-
-<span class="hd"># Mono (cualquier Unix)</span>
-mcs -r:System.Numerics.dll \
-    bip39_dados.cs
-mono bip39_dados.exe --test</div>
-      <div class="run" data-l="en"><span class="hd"># .NET 6 or later</span>
-dotnet new console -o bip39
-cp bip39_dados.cs \
-   bip39/Program.cs
-cd bip39
-dotnet run -- --test
-
-<span class="hd"># Mono (any Unix)</span>
-mcs -r:System.Numerics.dll \
-    bip39_dados.cs
-mono bip39_dados.exe --test</div>
-
-      <div class="acts">
-        <button class="btn solid" onclick="descargar('bip39_dados.cs')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
-        <button class="btn" onclick="verCodigo('bip39_dados.cs')" data-l="es">Ver código</button>
-        <button class="btn" onclick="verCodigo('bip39_dados.cs')" data-l="en">View code</button>
-      </div>
-      <div class="hashline">de49a113e47e2afbaf3649abb2a01102618c4027521e4022bf92de11d082a726</div>
-    </div>
   </div>
 
   <div class="viewer" id="viewer">
@@ -616,34 +567,34 @@ mono bip39_dados.exe --test</div>
 
   <div class="note">
     <span class="tag" data-l="es">Esta página se verifica a sí misma</span><span class="tag" data-l="en">This page verifies itself</span>
-    <p data-l="es">Los cuatro scripts de esta página van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
-    <p data-l="en">All four scripts on this page live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
+    <p data-l="es">Los tres scripts de esta página van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
+    <p data-l="en">All three scripts on this page live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
     <p data-l="es"><strong>Guarda esta página</strong> (Ctrl-S / Cmd-S) y llévatela al ordenador sin red: funciona entera sin conexión, scripts incluidos. Aun así, la verificación que de verdad cuenta es la firma GPG de abajo.</p>
     <p data-l="en"><strong>Save this page</strong> (Ctrl-S / Cmd-S) and take it to your offline computer: it works completely without a connection, scripts included. Even so, the verification that really counts is the GPG signature below.</p>
   </div>
 
-  <!-- ---------- comprobación cruzada entre los tres ---------- -->
-  <h3 data-l="es">Comprobar que los tres coinciden</h3>
-  <h3 data-l="en">Checking that all three agree</h3>
-  <p data-l="es">Los tres scripts <em>deberían</em> dar exactamente las mismas 12 palabras a partir de las mismas tiradas. «Debería» no es una garantía: un fallo al portar el algoritmo de un lenguaje a otro produciría palabras distintas sin que nada avisara. Este cuarto script lo comprueba por ti, y deja un informe escrito de cada prueba.</p>
-  <p data-l="en">All three scripts <em>should</em> produce exactly the same 12 words from the same rolls. "Should" is not a guarantee: a mistake porting the algorithm from one language to another would produce different words with nothing to warn you. This fourth script checks it for you, and leaves a written report of every test.</p>
+  <!-- ---------- comprobación cruzada entre los dos ---------- -->
+  <h3 data-l="es">Comprobar que los dos coinciden</h3>
+  <h3 data-l="en">Checking that both agree</h3>
+  <p data-l="es">Los dos scripts <em>deberían</em> dar exactamente las mismas 12 palabras a partir de las mismas tiradas. «Debería» no es una garantía: un fallo al portar el algoritmo de un lenguaje a otro produciría palabras distintas sin que nada avisara. Este tercer script lo comprueba por ti, y deja un informe escrito de cada prueba.</p>
+  <p data-l="en">Both scripts <em>should</em> produce exactly the same 12 words from the same rolls. "Should" is not a guarantee: a mistake porting the algorithm from one language to another would produce different words with nothing to warn you. This third script checks it for you, and leaves a written report of every test.</p>
 
   <div class="tool">
     <h3 style="margin-top:0">comparar_implementaciones.sh</h3>
 
     <span class="lab" data-l="es">Qué hace, en orden</span><span class="lab" data-l="en">What it does, in order</span>
     <ol data-l="es" style="font-size:.9rem;color:var(--bone-dim)">
-      <li>Lanza <code>--test</code> en las tres implementaciones: los vectores oficiales de BIP-39.</li>
+      <li>Lanza <code>--test</code> en las dos implementaciones: los vectores oficiales de BIP-39.</li>
       <li>Saca 50 tiradas al azar de <code>/dev/urandom</code>.</li>
-      <li>Se las pasa a Python, Node y C# por la entrada estándar, sin tocarlas.</li>
-      <li>Compara la entropía y las 12 palabras de los tres. Si algo difiere, termina con error.</li>
+      <li>Se las pasa a Python y Node por la entrada estándar, sin tocarlas.</li>
+      <li>Compara la entropía y las 12 palabras de las dos. Si algo difiere, termina con error.</li>
       <li>Escribe un informe en <code>scripts/informes/</code>, uno por ronda.</li>
     </ol>
     <ol data-l="en" style="font-size:.9rem;color:var(--bone-dim)">
-      <li>Runs <code>--test</code> on all three implementations: the official BIP-39 vectors.</li>
+      <li>Runs <code>--test</code> on both implementations: the official BIP-39 vectors.</li>
       <li>Draws 50 random rolls from <code>/dev/urandom</code>.</li>
-      <li>Feeds them to Python, Node and C# on standard input, unmodified.</li>
-      <li>Compares the entropy and the 12 words across all three. If anything differs, it exits with an error.</li>
+      <li>Feeds them to Python and Node on standard input, unmodified.</li>
+      <li>Compares the entropy and the 12 words across both. If anything differs, it exits with an error.</li>
       <li>Writes a report into <code>scripts/informes/</code>, one per round.</li>
     </ol>
 
@@ -652,13 +603,13 @@ mono bip39_dados.exe --test</div>
         <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
         <ul class="reqs" data-l="es">
           <li><b>bash</b> · macOS, Linux o WSL en Windows</li>
-          <li>Los <b>tres lenguajes a la vez</b>: python3, node y mono o dotnet</li>
+          <li>Los <b>dos lenguajes a la vez</b>: python3 y node</li>
           <li>La <b>estructura del repositorio</b>: no funciona con el <code>.sh</code> suelto</li>
           <li>Ninguna dependencia nueva</li>
         </ul>
         <ul class="reqs" data-l="en">
           <li><b>bash</b> · macOS, Linux or WSL on Windows</li>
-          <li>All <b>three languages at once</b>: python3, node and mono or dotnet</li>
+          <li>Both <b>languages at once</b>: python3 and node</li>
           <li>The <b>repository layout</b>: it won't work as a loose <code>.sh</code></li>
           <li>No new dependencies</li>
         </ul>
@@ -717,7 +668,7 @@ Decimal      197469499237907254833369827531030802576</div>
       <button class="btn" onclick="verCodigo('comparar_implementaciones.sh')" data-l="es">Ver código</button>
       <button class="btn" onclick="verCodigo('comparar_implementaciones.sh')" data-l="en">View code</button>
     </div>
-    <div class="hashline">9d0a7c26e24c09dba90ac68e236437695c947418efb9765872e4e932ecdb84d7</div>
+    <div class="hashline">119902d835e43a835873c0c7f79fd816f371613f7be18f7910689b45ea884442</div>
   </div>
 </section>
 
@@ -2186,824 +2137,19 @@ main().catch(err => {
   process.exit(1);
 });
 </script>
-<script type="text/plain" id="src-bip39_dados.cs">
-// bip39_dados.cs - 12 palabras BIP39 a partir de 50 tiradas de un dado de 6 caras.
-//
-// COMPILAR Y EJECUTAR:
-//
-//     .NET 6, 7, 8 o 9 (lo habitual hoy):
-//         dotnet new console -o bip39
-//         cp bip39_dados.cs bip39/Program.cs      # sustituye el generado
-//         cd bip39 && dotnet run -- --test
-//       Puede salir el aviso CS8600 en Console.ReadLine(): las plantillas
-//       activan <Nullable>enable</Nullable> y ese metodo devuelve string?.
-//       Es solo un AVISO, compila y funciona. No se usa "string?" aqui para
-//       mantener la compatibilidad con compiladores antiguos.
-//
-//     .NET 10 o superior (permite ficheros sueltos, sin proyecto):
-//         dotnet run bip39_dados.cs --test
-//
-//     Mono (cualquier Unix, sin instalar .NET):
-//         mcs -r:System.Numerics.dll -out:bip39_dados.exe bip39_dados.cs
-//         mono bip39_dados.exe --test
-//       El -r:System.Numerics.dll es obligatorio en Mono; con dotnet no.
-//
-// REQUISITOS MINIMOS:
-//     Este fichero compila con -langversion:6 (C# 6, ano 2015) y solo usa
-//     BigInteger y SHA256, ambos disponibles desde .NET Framework 4.0.
-//     Cualquier .NET de los ultimos diez anyos lo ejecuta sin cambios.
-//
-// USO:
-//     bip39_dados                # pide las tiradas por teclado
-//     bip39_dados --detalle      // ademas, muestra los pasos intermedios
-//     bip39_dados --test         // autocomprobacion con vectores oficiales
-//
-// EL METODO EN CINCO PASOS:
-//
-//     50 tiradas de d6
-//           |  PASO 1: leer las tiradas como un numero en base 6
-//           v
-//     numero entero N  (unos 129,25 bits)
-//           |  PASO 2: quedarse con los 128 bits bajos
-//           v
-//     entropia = 16 bytes = 128 bits
-//           |  PASO 3: checksum = 4 primeros bits de SHA-256(entropia)
-//           v
-//     132 bits = 128 + 4
-//           |  PASO 4: escribir esos 132 bits como un numero en base 2048
-//           v
-//     12 indices (0-2047)
-//           |  PASO 5: buscar cada indice en la lista oficial
-//           v
-//     12 palabras
-//
-//     Los pasos 1 y 4 son la MISMA operacion en sentidos opuestos: una
-//     conversion de base. Primero LEEMOS los dados en base 6, luego ESCRIBIMOS
-//     el resultado en base 2048.
-//
-// NOTA SOBRE C#:
-//     long solo llega a 64 bits y nuestro N tiene 129, asi que usamos
-//     System.Numerics.BigInteger. A diferencia de Java, BigInteger en C# TIENE
-//     SOBRECARGA DE OPERADORES: puedes escribir "n = n * 6 + d" tal cual, sin
-//     llamadas a .Multiply() ni .Add(). Eso hace que el bucle de Horner se lea
-//     casi igual que en Python.
-//
-//     CUIDADO con ToByteArray(): devuelve los bytes en LITTLE ENDIAN y anyade
-//     un byte de signo si el bit mas alto vale 1. Para 2^128-1 devuelve 17
-//     bytes, no 16. Por eso este programa NO lo usa directamente: los helpers
-//     ABytesBigEndian y DeBytesBigEndian de abajo hacen la conversion a mano.
-//     Es la trampa numero uno al portar este algoritmo a C#.
-//
-// SEGURIDAD:
-//     - Ejecutalo en un ordenador SIN RED, idealmente arrancado desde un USB live.
-//     - No pases las tiradas como argumento: quedarian en el historial del shell.
-//     - Apunta las palabras en papel. Borra la pantalla al terminar.
-//     - El modo --detalle es para APRENDER, no para una semilla real.
-//
-// Dependencias: ninguna, solo la biblioteca estandar de .NET.
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-
-static class Bip39Dados
-{
-    // ========================================================================
-    //  CONSTANTES - de donde sale cada numero
-    // ========================================================================
-
-    // Un dado de 6 caras aporta log2(6) = 2,585 bits por tirada.
-    // 128 / 2,585 = 49,5 -> redondeando hacia arriba, 50 tiradas.
-    const int N_TIRADAS = 50;
-
-    // BIP39 admite 128, 160, 192, 224 o 256 bits. 128 es el estandar de 12 palabras.
-    const int BITS_ENTROPIA = 128;
-
-    // La especificacion fija: bits de checksum = bits de entropia / 32.
-    const int BITS_CHECKSUM = BITS_ENTROPIA / 32;            // 4
-
-    // La lista oficial tiene 2048 palabras, y 2048 = 2^11.
-    const int PALABRAS_EN_LISTA = 2048;
-    const int BITS_POR_PALABRA = 11;
-
-    // 128 + 4 = 132, y 132 / 11 = 12 exactas. No sobra ni falta un bit.
-    const int N_PALABRAS = (BITS_ENTROPIA + BITS_CHECKSUM) / BITS_POR_PALABRA;   // 12
-
-    const int BYTES_ENTROPIA = BITS_ENTROPIA / 8;            // 16
-
-    // BigInteger.Pow(2, 128). Se calcula una vez al arrancar.
-    static readonly BigInteger DOS_ELEVADO_A_128 = BigInteger.Pow(2, BITS_ENTROPIA);
-
-
-    // ========================================================================
-    //  PASOS 1 y 2 - de las tiradas a la entropia
-    // ========================================================================
-
-    /// <summary>Convierte 50 enteros del 1 al 6 en 16 bytes de entropia.</summary>
-    static byte[] TiradasAEntropia(IList<int> tiradas)
-    {
-        if (tiradas.Count != N_TIRADAS)
-            throw new ArgumentException(
-                $"hacen falta exactamente {N_TIRADAS} tiradas, recibidas {tiradas.Count}");
-
-        // ---- PASO 1: las tiradas son los digitos de un numero en base 6 ----
-        //
-        // El dado no tiene cara 0, asi que restamos 1 para pasar de 1..6 a 0..5.
-        // El numero que formamos es:
-        //
-        //     N = d1*6^49 + d2*6^48 + ... + d49*6^1 + d50*6^0
-        //
-        // pero no calculamos potencias: usamos el METODO DE HORNER, que
-        // multiplica el acumulado por 6 y le suma el digito nuevo.
-        // Con las tiradas 3,1,6,4:
-        //
-        //     n=0 -> 0*6+2 = 2 -> 2*6+0 = 12 -> 12*6+5 = 77 -> 77*6+3 = 465
-        //
-        // OJO: la PRIMERA tirada acaba siendo el digito MAS SIGNIFICATIVO.
-        // Cambiar el orden produce una semilla completamente distinta.
-        //
-        BigInteger n = BigInteger.Zero;
-        foreach (int tirada in tiradas)
-        {
-            if (tirada < 1 || tirada > 6)
-                throw new ArgumentException($"tirada fuera del rango 1-6: {tirada}");
-            n = n * 6 + (tirada - 1);       // sobrecarga de operadores: se lee solo
-        }
-
-        // ---- PASO 2: recortar a exactamente 128 bits -----------------------
-        //
-        // N puede llegar hasta 6^50 - 1, que es 2,375 veces mayor que 2^128.
-        //
-        // SOBRE EL SESGO: como 6^50 no es multiplo exacto de 2^128, algunos
-        // resultados salen 3 veces y otros 2. La entropia real baja de 128 a
-        // 127,97 bits. Son 0,03 bits: irrelevante.
-        //
-        // Si lo quieres perfecto, descomenta estas dos lineas. Solo aceptan N
-        // por debajo de 2^129, rango donde 2^128 cabe justo 2 veces y el modulo
-        // es uniforme. Precio: repetir las 50 tiradas el 15,8% de las veces.
-        //
-        // if (n >= BigInteger.Pow(2, BITS_ENTROPIA + 1))
-        //     throw new ArgumentException("descarta estas tiradas y vuelve a tirar los 50 dados");
-
-        n %= DOS_ELEVADO_A_128;
-
-        return ABytesBigEndian(n, BYTES_ENTROPIA);
-    }
-
-    /// <summary>
-    /// Empaqueta un BigInteger no negativo en un array de tamanyo fijo, byte mas
-    /// significativo primero ("big endian").
-    ///
-    /// NO usamos ToByteArray() porque devuelve LITTLE ENDIAN y anyade un byte de
-    /// signo cuando el bit alto vale 1 (para 2^128-1 devolveria 17 bytes). En
-    /// .NET Core 3.0+ existe ToByteArray(isUnsigned: true, isBigEndian: true),
-    /// pero lo hacemos a mano para que el codigo funcione tambien en Mono y en
-    /// .NET Framework, y sobre todo para que se VEA lo que ocurre.
-    /// </summary>
-    static byte[] ABytesBigEndian(BigInteger n, int nBytes)
-    {
-        if (n.Sign < 0) throw new ArgumentException("solo numeros no negativos");
-        var bytes = new byte[nBytes];
-        for (int i = nBytes - 1; i >= 0; i--)     // se rellena desde el final
-        {
-            bytes[i] = (byte)(n & 0xFF);          // los 8 bits mas bajos
-            n >>= 8;                              // y se descartan
-        }
-        if (!n.IsZero) throw new ArgumentException($"el numero no cabe en {nBytes} bytes");
-        return bytes;
-    }
-
-    /// <summary>
-    /// Convierte bytes big endian en BigInteger. Tampoco usamos el constructor
-    /// new BigInteger(byte[]) porque espera little endian e interpreta el bit
-    /// alto como signo: un array que empiece por 0xFF saldria NEGATIVO.
-    /// </summary>
-    static BigInteger DeBytesBigEndian(byte[] bytes)
-    {
-        BigInteger n = BigInteger.Zero;
-        foreach (byte b in bytes) n = (n << 8) | b;   // Horner, pero en base 256
-        return n;
-    }
-
-
-    // ========================================================================
-    //  PASO 3 - el checksum
-    // ========================================================================
-
-    /// <summary>Devuelve los 4 bits de checksum como un int de 0 a 15.</summary>
-    static int CalcularChecksum(byte[] entropia)
-    {
-        // Los 4 bits mas altos del PRIMER BYTE del SHA-256 de la entropia.
-        //
-        //     SHA-256(entropia) = 05 fd a8 7a ...
-        //                         ^^
-        //                    primer byte = 0x05 = 00000101
-        //                                         ^^^^
-        //                                    estos 4 son el checksum
-        //
-        // Pasamos por el byte porque C#, como casi todos los lenguajes, no sabe
-        // indexar BITS: la unidad minima direccionable de un array es el byte.
-        //
-        // Estos bits no dan seguridad. Sirven para que, si copias mal una
-        // palabra, la cartera rechace la frase (15 de cada 16 veces) en vez de
-        // abrir en silencio una cuenta vacia que no es la tuya.
-        using (var sha = SHA256.Create())
-        {
-            byte[] digest = sha.ComputeHash(entropia);
-            return digest[0] >> (8 - BITS_CHECKSUM);
-        }
-    }
-
-
-    // ========================================================================
-    //  PASOS 4 y 5 - de la entropia a las palabras
-    // ========================================================================
-
-    /// <summary>Convierte 16 bytes de entropia en los 12 indices (0-2047).</summary>
-    static int[] EntropiaAIndices(byte[] entropia)
-    {
-        if (entropia.Length != BYTES_ENTROPIA)
-            throw new ArgumentException(
-                $"la entropia debe ocupar {BYTES_ENTROPIA} bytes, recibidos {entropia.Length}");
-
-        // ---- Juntar entropia y checksum en un solo numero de 132 bits ------
-        //
-        //     [ ---------- 128 bits de entropia ---------- ][chk]
-        //      \___________________ 132 bits ___________________/
-        //
-        // "<< 4" corre la entropia 4 posiciones a la izquierda, dejando 4 ceros
-        // al final. El "|" (OR bit a bit) rellena justo esos huecos.
-        BigInteger v = DeBytesBigEndian(entropia) << BITS_CHECKSUM;
-        v |= CalcularChecksum(entropia);
-
-        // ---- PASO 4: escribir los 132 bits como un numero en base 2048 -----
-        //
-        // Esto es EXACTAMENTE la operacion inversa del paso 1. Alli leiamos
-        // digitos en base 6 y construiamos un numero; aqui cogemos un numero y
-        // extraemos sus digitos en base 2048. Cada "digito" es un indice.
-        //
-        //   v = 1746·2048^11 + 1100·2048^10 + ... + 723·2048^1 + 896·2048^0
-        //        \____/                                            \___/
-        //      1ª palabra                                     12ª palabra
-        //
-        // BigInteger.DivRem da cociente y resto de una sola pasada, igual que
-        // el divmod de Python. El resto son los 11 bits bajos: el digito de
-        // menor peso. Como salen del reves, se rellena el array desde el final.
-        //
-        var indices = new int[N_PALABRAS];
-        for (int i = N_PALABRAS - 1; i >= 0; i--)
-        {
-            BigInteger resto;
-            v = BigInteger.DivRem(v, PALABRAS_EN_LISTA, out resto);
-            indices[i] = (int)resto;
-        }
-
-        // Tras 12 divisiones no debe quedar nada: 12 x 11 = 132 bits, justos.
-        if (!v.IsZero)
-            throw new InvalidOperationException("quedaron bits sin repartir: revisa las constantes");
-
-        return indices;
-    }
-
-    /// <summary>Convierte 16 bytes de entropia en las 12 palabras BIP39.</summary>
-    static string[] EntropiaAPalabras(byte[] entropia)
-    {
-        // ---- PASO 5: cada indice es una posicion directa en la lista -------
-        return EntropiaAIndices(entropia).Select(i => PALABRAS[i]).ToArray();
-    }
-
-
-    // ========================================================================
-    //  ENTRADA - leer las tiradas del usuario
-    // ========================================================================
-
-    static List<int> LeerTiradas()
-    {
-        Console.WriteLine($"Introduce {N_TIRADAS} tiradas de un dado de 6 caras.");
-        Console.WriteLine("Puedes escribirlas de una en una o varias juntas (ej: 3 1 6 4 2).");
-        Console.WriteLine("Ctrl-C para abortar.\n");
-
-        var tiradas = new List<int>();
-        while (tiradas.Count < N_TIRADAS)
-        {
-            Console.Write($"[{tiradas.Count,2}/{N_TIRADAS}] > ");
-            string linea = Console.ReadLine();
-            if (linea == null) break;              // fin de la entrada canalizada
-
-            foreach (char c in linea)
-            {
-                if (c >= '1' && c <= '6')
-                {
-                    tiradas.Add(c - '0');
-                    if (tiradas.Count == N_TIRADAS) break;
-                }
-                else if (!char.IsWhiteSpace(c) && ",;-.".IndexOf(c) < 0)
-                {
-                    // Avisamos en vez de callar: un '7' o una 'o' suele ser un
-                    // error de tecleo que cambiaria la semilla sin que te enteres.
-                    Console.WriteLine($"  aviso: ignorado el caracter '{c}'");
-                }
-            }
-        }
-
-        if (tiradas.Count != N_TIRADAS)
-            throw new InvalidOperationException(
-                $"solo se leyeron {tiradas.Count} tiradas de {N_TIRADAS}. Abortado.");
-        return tiradas;
-    }
-
-
-    // ========================================================================
-    //  SALIDA
-    // ========================================================================
-
-    static string AHex(byte[] bytes)
-    {
-        var sb = new StringBuilder();
-        foreach (byte b in bytes) sb.Append(b.ToString("x2"));
-        return sb.ToString();
-    }
-
-    /// <summary>Representacion binaria de un BigInteger, sin ceros a la izquierda.</summary>
-    static string ABinario(BigInteger n)
-    {
-        if (n.IsZero) return "0";
-        var sb = new StringBuilder();
-        while (!n.IsZero) { sb.Insert(0, (char)('0' + (int)(n & 1))); n >>= 1; }
-        return sb.ToString();
-    }
-
-    static void MostrarResultado(IList<int> tiradas, byte[] entropia, string[] palabras)
-    {
-        string raya = new string('=', 52);
-        Console.WriteLine("\n" + raya);
-        Console.WriteLine("Tiradas  : " + string.Concat(tiradas));
-        Console.WriteLine("Entropia : " + AHex(entropia));
-        Console.WriteLine(raya);
-        for (int i = 0; i < palabras.Length; i++)
-            Console.WriteLine($"{i + 1,2}. {palabras[i]}");
-        Console.WriteLine(raya);
-        Console.WriteLine("Apuntalas en papel, en este orden. Nunca en un fichero ni en una foto.");
-        Console.WriteLine("Cuando termines: limpia la pantalla (clear / cls).");
-    }
-
-    /// <summary>Imprime todos los valores intermedios. Solo para aprender y enseñar.</summary>
-    static void MostrarDetalle(IList<int> tiradas, byte[] entropia)
-    {
-        // Rehacemos el paso 1 aqui para poder enseñar N, que la funcion
-        // principal no devuelve. Mantener limpias las funciones de calculo y
-        // separar la pedagogia es mejor que llenarlas de Console.WriteLine.
-        BigInteger n = BigInteger.Zero;
-        foreach (int t in tiradas) n = n * 6 + (t - 1);
-
-        int checksum = CalcularChecksum(entropia);
-        int[] indices = EntropiaAIndices(entropia);
-        string bitsEntropia = ABinario(DeBytesBigEndian(entropia)).PadLeft(BITS_ENTROPIA, '0');
-        string bitsChecksum = Convert.ToString(checksum, 2).PadLeft(BITS_CHECKSUM, '0');
-        string bitsTotales = bitsEntropia + bitsChecksum;
-
-        byte[] digest;
-        using (var sha = SHA256.Create()) digest = sha.ComputeHash(entropia);
-
-        string raya = new string('-', 52);
-
-        Console.WriteLine("\n" + raya);
-        Console.WriteLine("PASO 1 - las tiradas como numero en base 6");
-        Console.WriteLine(raya);
-        Console.WriteLine("  digitos (tirada - 1): " + string.Concat(tiradas.Select(t => t - 1)));
-        Console.WriteLine("  N  = " + n);
-        Console.WriteLine("  N ocupa " + ABinario(n).Length + " bits");
-
-        Console.WriteLine("\n" + raya);
-        Console.WriteLine($"PASO 2 - recorte a {BITS_ENTROPIA} bits");
-        Console.WriteLine(raya);
-        Console.WriteLine($"  2^{BITS_ENTROPIA} = {DOS_ELEVADO_A_128}");
-        Console.WriteLine(n < DOS_ELEVADO_A_128
-            ? $"  N ya era menor que 2^{BITS_ENTROPIA}: el modulo no cambia nada"
-            : $"  N era mayor: se le resta 2^{BITS_ENTROPIA}");
-        Console.WriteLine("  entropia (hex) = " + AHex(entropia));
-        Console.WriteLine("  entropia (bin) = " + bitsEntropia);
-
-        Console.WriteLine("\n" + raya);
-        Console.WriteLine("PASO 3 - checksum");
-        Console.WriteLine(raya);
-        Console.WriteLine("  SHA-256(entropia) = " + AHex(digest).Substring(0, 16) + "...");
-        Console.WriteLine($"  primer byte = 0x{digest[0]:x2} = {Convert.ToString(digest[0], 2).PadLeft(8, '0')}");
-        Console.WriteLine($"  sus {BITS_CHECKSUM} bits altos = {bitsChecksum}   <- checksum");
-
-        Console.WriteLine("\n" + raya);
-        Console.WriteLine($"PASOS 4 y 5 - {BITS_ENTROPIA + BITS_CHECKSUM} bits en grupos de {BITS_POR_PALABRA}");
-        Console.WriteLine(raya);
-        Console.WriteLine("  " + bitsEntropia + "|" + bitsChecksum);
-        for (int pos = 0; pos < indices.Length; pos++)
-        {
-            string grupo = bitsTotales.Substring(pos * BITS_POR_PALABRA, BITS_POR_PALABRA);
-            Console.WriteLine($"  {pos + 1,2}. {grupo} = {indices[pos],4} -> {PALABRAS[indices[pos]]}");
-        }
-        Console.WriteLine($"\n  Los ultimos {BITS_CHECKSUM} bits del grupo {N_PALABRAS} son el checksum de arriba.");
-    }
-
-
-    // ========================================================================
-    //  AUTOCOMPROBACION
-    // ========================================================================
-
-    static void Comprobar(bool condicion, string mensaje)
-    {
-        // No usamos Debug.Assert: desaparece al compilar en modo Release, igual
-        // que los assert de Python con -O. Una excepcion normal no se puede
-        // desactivar por accidente.
-        if (!condicion) throw new Exception("FALLO: " + mensaje);
-    }
-
-    static void Autotest()
-    {
-        // La lista incrustada debe ser byte a byte la oficial. Si alguien
-        // cambiara una sola letra, este hash no cuadraria.
-        Comprobar(PALABRAS.Length == PALABRAS_EN_LISTA, "la lista debe tener 2048 palabras");
-        byte[] hashLista;
-        using (var sha = SHA256.Create())
-            hashLista = sha.ComputeHash(Encoding.ASCII.GetBytes(string.Join("\n", PALABRAS) + "\n"));
-        Comprobar(AHex(hashLista) == "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda",
-            "la lista de palabras NO coincide con la oficial de BIP-39");
-
-        // Vectores de la especificacion (github.com/trezor/python-mnemonic).
-        var vectores = new[] {
-            new[] { "00000000000000000000000000000000",
-                    "abandon abandon abandon abandon abandon abandon " +
-                    "abandon abandon abandon abandon abandon about" },
-            new[] { "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-                    "legal winner thank year wave sausage worth useful " +
-                    "legal winner thank yellow" },
-            new[] { "80808080808080808080808080808080",
-                    "letter advice cage absurd amount doctor acoustic avoid " +
-                    "letter advice cage above" },
-            new[] { "ffffffffffffffffffffffffffffffff",
-                    "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong" },
-            new[] { "9e885d952ad362caeb4efe34a8e91bd2",
-                    "ozone drill grab fiber curtain grace pudding thank " +
-                    "cruise elder eight picnic" },
-        };
-        foreach (var v in vectores)
-        {
-            string obtenido = string.Join(" ", EntropiaAPalabras(DeHex(v[0])));
-            Comprobar(obtenido == v[1], $"vector {v[0]}:\n  {obtenido}");
-        }
-
-        // 50 unos -> todos los digitos a 0 -> N = 0 -> entropia toda a cero
-        Comprobar(AHex(TiradasAEntropia(Repetir(1, 50))) == new string('0', 32),
-            "50 unos deberian dar entropia cero");
-        // 50 seises -> N = 6^50 - 1, contrastado con el calculo directo
-        Comprobar(AHex(TiradasAEntropia(Repetir(6, 50))) ==
-            AHex(ABytesBigEndian((BigInteger.Pow(6, 50) - 1) % DOS_ELEVADO_A_128, 16)),
-            "50 seises no cuadran con 6^50-1 mod 2^128");
-        // El orden importa: la primera tirada pesa 6^49, la ultima 6^0
-        var a = Repetir(1, 50); a[0] = 2;
-        var b = Repetir(1, 50); b[49] = 2;
-        Comprobar(AHex(TiradasAEntropia(a)) != AHex(TiradasAEntropia(b)),
-            "el orden de las tiradas deberia importar");
-        // Los helpers de bytes deben ser inversos exactos, incluido el bit alto a 1
-        byte[] extremo = DeHex("ffffffffffffffffffffffffffffffff");
-        Comprobar(AHex(ABytesBigEndian(DeBytesBigEndian(extremo), 16)) == AHex(extremo),
-            "ida y vuelta de bytes rota en el caso extremo");
-        // Las constantes tienen que encajar sin bits sobrantes
-        Comprobar(N_PALABRAS * BITS_POR_PALABRA == BITS_ENTROPIA + BITS_CHECKSUM,
-            "las constantes no encajan");
-
-        Console.WriteLine($"OK: {vectores.Length} vectores oficiales y 5 comprobaciones propias superados.");
-    }
-
-    static List<int> Repetir(int valor, int veces)
-    {
-        var lista = new List<int>();
-        for (int i = 0; i < veces; i++) lista.Add(valor);
-        return lista;
-    }
-
-    static byte[] DeHex(string hex)
-    {
-        var bytes = new byte[hex.Length / 2];
-        for (int i = 0; i < bytes.Length; i++)
-            bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-        return bytes;
-    }
-
-
-    // ========================================================================
-    //  PROGRAMA PRINCIPAL
-    // ========================================================================
-
-    static int Main(string[] args)
-    {
-        try
-        {
-            if (Array.IndexOf(args, "--test") >= 0) { Autotest(); return 0; }
-
-            var tiradas = LeerTiradas();
-            byte[] entropia = TiradasAEntropia(tiradas);        // pasos 1 y 2
-            string[] palabras = EntropiaAPalabras(entropia);    // pasos 3, 4 y 5
-
-            if (Array.IndexOf(args, "--detalle") >= 0) MostrarDetalle(tiradas, entropia);
-            MostrarResultado(tiradas, entropia, palabras);
-            return 0;
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine("\nERROR: " + e.Message);
-            return 1;
-        }
-    }
-
-
-    // ========================================================================
-    //  LA LISTA OFICIAL - 2048 palabras del BIP-39 en ingles
-    // ========================================================================
-    //
-    //  Dos propiedades la hacen especial:
-    //    - Son 2048 = 2^11 exactas, para que cada palabra valga 11 bits limpios.
-    //    - Las 4 PRIMERAS LETRAS son unicas (aban/abil/able...). Puedes apuntar
-    //      solo 4 letras por palabra sin perder informacion, util al grabar la
-    //      semilla en metal.
-    //
-    //  El orden es alfabetico y NO se puede alterar: la posicion ES el dato.
-    //
-    static readonly string[] PALABRAS = (@"
-        abandon ability able about above absent absorb abstract
-        absurd abuse access accident account accuse achieve acid
-        acoustic acquire across act action actor actress actual
-        adapt add addict address adjust admit adult advance
-        advice aerobic affair afford afraid again age agent
-        agree ahead aim air airport aisle alarm album
-        alcohol alert alien all alley allow almost alone
-        alpha already also alter always amateur amazing among
-        amount amused analyst anchor ancient anger angle angry
-        animal ankle announce annual another answer antenna antique
-        anxiety any apart apology appear apple approve april
-        arch arctic area arena argue arm armed armor
-        army around arrange arrest arrive arrow art artefact
-        artist artwork ask aspect assault asset assist assume
-        asthma athlete atom attack attend attitude attract auction
-        audit august aunt author auto autumn average avocado
-        avoid awake aware away awesome awful awkward axis
-        baby bachelor bacon badge bag balance balcony ball
-        bamboo banana banner bar barely bargain barrel base
-        basic basket battle beach bean beauty because become
-        beef before begin behave behind believe below belt
-        bench benefit best betray better between beyond bicycle
-        bid bike bind biology bird birth bitter black
-        blade blame blanket blast bleak bless blind blood
-        blossom blouse blue blur blush board boat body
-        boil bomb bone bonus book boost border boring
-        borrow boss bottom bounce box boy bracket brain
-        brand brass brave bread breeze brick bridge brief
-        bright bring brisk broccoli broken bronze broom brother
-        brown brush bubble buddy budget buffalo build bulb
-        bulk bullet bundle bunker burden burger burst bus
-        business busy butter buyer buzz cabbage cabin cable
-        cactus cage cake call calm camera camp can
-        canal cancel candy cannon canoe canvas canyon capable
-        capital captain car carbon card cargo carpet carry
-        cart case cash casino castle casual cat catalog
-        catch category cattle caught cause caution cave ceiling
-        celery cement census century cereal certain chair chalk
-        champion change chaos chapter charge chase chat cheap
-        check cheese chef cherry chest chicken chief child
-        chimney choice choose chronic chuckle chunk churn cigar
-        cinnamon circle citizen city civil claim clap clarify
-        claw clay clean clerk clever click client cliff
-        climb clinic clip clock clog close cloth cloud
-        clown club clump cluster clutch coach coast coconut
-        code coffee coil coin collect color column combine
-        come comfort comic common company concert conduct confirm
-        congress connect consider control convince cook cool copper
-        copy coral core corn correct cost cotton couch
-        country couple course cousin cover coyote crack cradle
-        craft cram crane crash crater crawl crazy cream
-        credit creek crew cricket crime crisp critic crop
-        cross crouch crowd crucial cruel cruise crumble crunch
-        crush cry crystal cube culture cup cupboard curious
-        current curtain curve cushion custom cute cycle dad
-        damage damp dance danger daring dash daughter dawn
-        day deal debate debris decade december decide decline
-        decorate decrease deer defense define defy degree delay
-        deliver demand demise denial dentist deny depart depend
-        deposit depth deputy derive describe desert design desk
-        despair destroy detail detect develop device devote diagram
-        dial diamond diary dice diesel diet differ digital
-        dignity dilemma dinner dinosaur direct dirt disagree discover
-        disease dish dismiss disorder display distance divert divide
-        divorce dizzy doctor document dog doll dolphin domain
-        donate donkey donor door dose double dove draft
-        dragon drama drastic draw dream dress drift drill
-        drink drip drive drop drum dry duck dumb
-        dune during dust dutch duty dwarf dynamic eager
-        eagle early earn earth easily east easy echo
-        ecology economy edge edit educate effort egg eight
-        either elbow elder electric elegant element elephant elevator
-        elite else embark embody embrace emerge emotion employ
-        empower empty enable enact end endless endorse enemy
-        energy enforce engage engine enhance enjoy enlist enough
-        enrich enroll ensure enter entire entry envelope episode
-        equal equip era erase erode erosion error erupt
-        escape essay essence estate eternal ethics evidence evil
-        evoke evolve exact example excess exchange excite exclude
-        excuse execute exercise exhaust exhibit exile exist exit
-        exotic expand expect expire explain expose express extend
-        extra eye eyebrow fabric face faculty fade faint
-        faith fall false fame family famous fan fancy
-        fantasy farm fashion fat fatal father fatigue fault
-        favorite feature february federal fee feed feel female
-        fence festival fetch fever few fiber fiction field
-        figure file film filter final find fine finger
-        finish fire firm first fiscal fish fit fitness
-        fix flag flame flash flat flavor flee flight
-        flip float flock floor flower fluid flush fly
-        foam focus fog foil fold follow food foot
-        force forest forget fork fortune forum forward fossil
-        foster found fox fragile frame frequent fresh friend
-        fringe frog front frost frown frozen fruit fuel
-        fun funny furnace fury future gadget gain galaxy
-        gallery game gap garage garbage garden garlic garment
-        gas gasp gate gather gauge gaze general genius
-        genre gentle genuine gesture ghost giant gift giggle
-        ginger giraffe girl give glad glance glare glass
-        glide glimpse globe gloom glory glove glow glue
-        goat goddess gold good goose gorilla gospel gossip
-        govern gown grab grace grain grant grape grass
-        gravity great green grid grief grit grocery group
-        grow grunt guard guess guide guilt guitar gun
-        gym habit hair half hammer hamster hand happy
-        harbor hard harsh harvest hat have hawk hazard
-        head health heart heavy hedgehog height hello helmet
-        help hen hero hidden high hill hint hip
-        hire history hobby hockey hold hole holiday hollow
-        home honey hood hope horn horror horse hospital
-        host hotel hour hover hub huge human humble
-        humor hundred hungry hunt hurdle hurry hurt husband
-        hybrid ice icon idea identify idle ignore ill
-        illegal illness image imitate immense immune impact impose
-        improve impulse inch include income increase index indicate
-        indoor industry infant inflict inform inhale inherit initial
-        inject injury inmate inner innocent input inquiry insane
-        insect inside inspire install intact interest into invest
-        invite involve iron island isolate issue item ivory
-        jacket jaguar jar jazz jealous jeans jelly jewel
-        job join joke journey joy judge juice jump
-        jungle junior junk just kangaroo keen keep ketchup
-        key kick kid kidney kind kingdom kiss kit
-        kitchen kite kitten kiwi knee knife knock know
-        lab label labor ladder lady lake lamp language
-        laptop large later latin laugh laundry lava law
-        lawn lawsuit layer lazy leader leaf learn leave
-        lecture left leg legal legend leisure lemon lend
-        length lens leopard lesson letter level liar liberty
-        library license life lift light like limb limit
-        link lion liquid list little live lizard load
-        loan lobster local lock logic lonely long loop
-        lottery loud lounge love loyal lucky luggage lumber
-        lunar lunch luxury lyrics machine mad magic magnet
-        maid mail main major make mammal man manage
-        mandate mango mansion manual maple marble march margin
-        marine market marriage mask mass master match material
-        math matrix matter maximum maze meadow mean measure
-        meat mechanic medal media melody melt member memory
-        mention menu mercy merge merit merry mesh message
-        metal method middle midnight milk million mimic mind
-        minimum minor minute miracle mirror misery miss mistake
-        mix mixed mixture mobile model modify mom moment
-        monitor monkey monster month moon moral more morning
-        mosquito mother motion motor mountain mouse move movie
-        much muffin mule multiply muscle museum mushroom music
-        must mutual myself mystery myth naive name napkin
-        narrow nasty nation nature near neck need negative
-        neglect neither nephew nerve nest net network neutral
-        never news next nice night noble noise nominee
-        noodle normal north nose notable note nothing notice
-        novel now nuclear number nurse nut oak obey
-        object oblige obscure observe obtain obvious occur ocean
-        october odor off offer office often oil okay
-        old olive olympic omit once one onion online
-        only open opera opinion oppose option orange orbit
-        orchard order ordinary organ orient original orphan ostrich
-        other outdoor outer output outside oval oven over
-        own owner oxygen oyster ozone pact paddle page
-        pair palace palm panda panel panic panther paper
-        parade parent park parrot party pass patch path
-        patient patrol pattern pause pave payment peace peanut
-        pear peasant pelican pen penalty pencil people pepper
-        perfect permit person pet phone photo phrase physical
-        piano picnic picture piece pig pigeon pill pilot
-        pink pioneer pipe pistol pitch pizza place planet
-        plastic plate play please pledge pluck plug plunge
-        poem poet point polar pole police pond pony
-        pool popular portion position possible post potato pottery
-        poverty powder power practice praise predict prefer prepare
-        present pretty prevent price pride primary print priority
-        prison private prize problem process produce profit program
-        project promote proof property prosper protect proud provide
-        public pudding pull pulp pulse pumpkin punch pupil
-        puppy purchase purity purpose purse push put puzzle
-        pyramid quality quantum quarter question quick quit quiz
-        quote rabbit raccoon race rack radar radio rail
-        rain raise rally ramp ranch random range rapid
-        rare rate rather raven raw razor ready real
-        reason rebel rebuild recall receive recipe record recycle
-        reduce reflect reform refuse region regret regular reject
-        relax release relief rely remain remember remind remove
-        render renew rent reopen repair repeat replace report
-        require rescue resemble resist resource response result retire
-        retreat return reunion reveal review reward rhythm rib
-        ribbon rice rich ride ridge rifle right rigid
-        ring riot ripple risk ritual rival river road
-        roast robot robust rocket romance roof rookie room
-        rose rotate rough round route royal rubber rude
-        rug rule run runway rural sad saddle sadness
-        safe sail salad salmon salon salt salute same
-        sample sand satisfy satoshi sauce sausage save say
-        scale scan scare scatter scene scheme school science
-        scissors scorpion scout scrap screen script scrub sea
-        search season seat second secret section security seed
-        seek segment select sell seminar senior sense sentence
-        series service session settle setup seven shadow shaft
-        shallow share shed shell sheriff shield shift shine
-        ship shiver shock shoe shoot shop short shoulder
-        shove shrimp shrug shuffle shy sibling sick side
-        siege sight sign silent silk silly silver similar
-        simple since sing siren sister situate six size
-        skate sketch ski skill skin skirt skull slab
-        slam sleep slender slice slide slight slim slogan
-        slot slow slush small smart smile smoke smooth
-        snack snake snap sniff snow soap soccer social
-        sock soda soft solar soldier solid solution solve
-        someone song soon sorry sort soul sound soup
-        source south space spare spatial spawn speak special
-        speed spell spend sphere spice spider spike spin
-        spirit split spoil sponsor spoon sport spot spray
-        spread spring spy square squeeze squirrel stable stadium
-        staff stage stairs stamp stand start state stay
-        steak steel stem step stereo stick still sting
-        stock stomach stone stool story stove strategy street
-        strike strong struggle student stuff stumble style subject
-        submit subway success such sudden suffer sugar suggest
-        suit summer sun sunny sunset super supply supreme
-        sure surface surge surprise surround survey suspect sustain
-        swallow swamp swap swarm swear sweet swift swim
-        swing switch sword symbol symptom syrup system table
-        tackle tag tail talent talk tank tape target
-        task taste tattoo taxi teach team tell ten
-        tenant tennis tent term test text thank that
-        theme then theory there they thing this thought
-        three thrive throw thumb thunder ticket tide tiger
-        tilt timber time tiny tip tired tissue title
-        toast tobacco today toddler toe together toilet token
-        tomato tomorrow tone tongue tonight tool tooth top
-        topic topple torch tornado tortoise toss total tourist
-        toward tower town toy track trade traffic tragic
-        train transfer trap trash travel tray treat tree
-        trend trial tribe trick trigger trim trip trophy
-        trouble truck true truly trumpet trust truth try
-        tube tuition tumble tuna tunnel turkey turn turtle
-        twelve twenty twice twin twist two type typical
-        ugly umbrella unable unaware uncle uncover under undo
-        unfair unfold unhappy uniform unique unit universe unknown
-        unlock until unusual unveil update upgrade uphold upon
-        upper upset urban urge usage use used useful
-        useless usual utility vacant vacuum vague valid valley
-        valve van vanish vapor various vast vault vehicle
-        velvet vendor venture venue verb verify version very
-        vessel veteran viable vibrant vicious victory video view
-        village vintage violin virtual virus visa visit visual
-        vital vivid vocal voice void volcano volume vote
-        voyage wage wagon wait walk wall walnut want
-        warfare warm warrior wash wasp waste water wave
-        way wealth weapon wear weasel weather web wedding
-        weekend weird welcome west wet whale what wheat
-        wheel when where whip whisper wide width wife
-        wild will win window wine wing wink winner
-        winter wire wisdom wise wish witness wolf woman
-        wonder wood wool word work world worry worth
-        wrap wreck wrestle wrist write wrong yard year
-        yellow you young youth zebra zero zone zoo
-").Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-}
-</script>
-
 <script type="text/plain" id="src-comparar_implementaciones.sh">
 #!/usr/bin/env bash
 # comparar_implementaciones.sh
 #
-# Comprueba que las 3 implementaciones (Python, JavaScript, C#) producen
+# Comprueba que las 2 implementaciones (Python, JavaScript) producen
 # EXACTAMENTE las mismas 12 palabras BIP-39 cuando reciben las mismas 50
 # tiradas de dado, y deja un informe en Markdown por cada ronda para poder
 # verificar la entropia a mano con herramientas externas.
 #
-# No instala nada nuevo: reutiliza los mismos interpretes/compiladores que
-# cada script ya necesita para funcionar (python3, node, y mono o dotnet
-# para C#; python3 tambien se usa para las conversiones de base del informe).
-# Genera tiradas de prueba con /dev/urandom, que ya trae el sistema operativo.
+# No instala nada nuevo: reutiliza los mismos interpretes que cada script ya
+# necesita para funcionar (python3 y node; python3 tambien se usa para las
+# conversiones de base del informe). Genera tiradas de prueba con
+# /dev/urandom, que ya trae el sistema operativo.
 #
 # USO:
 #     ./comparar_implementaciones.sh          # 5 rondas aleatorias
@@ -3022,7 +2168,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PY="$ROOT/python/bip39_dados.py"
 JS="$ROOT/javascript/bip39_dados.js"
-CS="$ROOT/csharp/bip39_dados.cs"
 INFORMES="$ROOT/informes"
 
 N_RONDAS="${1:-5}"
@@ -3032,45 +2177,17 @@ mkdir -p "$INFORMES"
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# ---------------------------------------------------------------------------
-# Localizar como ejecutar C#: Mono si esta disponible (compila el fichero
-# suelto, sin crear un proyecto), si no dotnet (necesita un proyecto en
-# .NET 6-9). CS_LABEL/CS_CMD_SETUP/CS_CMD_RUN son solo para MOSTRAR en el
-# informe el comando reproducible; cs_run() es lo que de verdad se ejecuta.
-# ---------------------------------------------------------------------------
-if command -v mcs >/dev/null 2>&1 && command -v mono >/dev/null 2>&1; then
-  mcs -r:System.Numerics.dll -out:"$TMPDIR/bip39.exe" "$CS" >/dev/null
-  cs_run() { mono "$TMPDIR/bip39.exe" "$@"; }
-  CS_LABEL="Mono"
-  CS_CMD_SETUP="mcs -r:System.Numerics.dll -out:bip39_dados.exe scripts/csharp/bip39_dados.cs"
-  CS_CMD_RUN="mono bip39_dados.exe"
-elif command -v dotnet >/dev/null 2>&1; then
-  PROJ="$TMPDIR/csproj"
-  dotnet new console -o "$PROJ" >/dev/null
-  cp "$CS" "$PROJ/Program.cs"
-  dotnet build "$PROJ" -c Release -o "$PROJ/out" >/dev/null
-  DLL="$PROJ/out/$(basename "$PROJ").dll"
-  cs_run() { dotnet "$DLL" "$@"; }
-  CS_LABEL="dotnet"
-  CS_CMD_SETUP="dotnet new console -o bip39 && cp scripts/csharp/bip39_dados.cs bip39/Program.cs"
-  CS_CMD_RUN="dotnet run --project bip39"
-else
-  echo "ERROR: no se encontro ni mono ni dotnet. Instala uno de los dos para C#." >&2
-  exit 1
-fi
-
 echo "== Paso 1: autocomprobacion individual (--test) de cada implementacion =="
 python3 "$PY" --test
 node "$JS" --test
-cs_run --test
 echo
 
 # ---------------------------------------------------------------------------
 # Extrae de la salida completa de un programa la linea "Entropia : <hex>" y
 # la lista de 12 palabras, y las junta en un solo string "hex|palabras".
-# Las tres implementaciones imprimen ambas cosas con el mismo formato
+# Las dos implementaciones imprimen ambas cosas con el mismo formato
 # ("Entropia : ..." y "NN. palabra"), asi que un mismo grep/awk vale para
-# las tres.
+# las dos.
 # ---------------------------------------------------------------------------
 extraer() {
   local salida="$1"
@@ -3119,7 +2236,6 @@ generar_informe() {
   local ronda="$1" tiradas="$2" coincide="$3"
   local hex_py="$4" pal_py="$5"
   local hex_js="$6" pal_js="$7"
-  local hex_cs="$8" pal_cs="$9"
   local fecha
   fecha="$(date '+%Y-%m-%d %H:%M:%S %z')"
 
@@ -3132,7 +2248,7 @@ generar_informe() {
 
   printf '## Resultado\n\n'
   if [[ "$coincide" == "si" ]]; then
-    printf '**OK** - las 3 implementaciones producen la misma entropia y las mismas 12 palabras.\n\n'
+    printf '**OK** - las 2 implementaciones producen la misma entropia y las mismas 12 palabras.\n\n'
   else
     printf '**DESAJUSTE** - alguna implementacion difiere. No uses este metodo hasta resolverlo.\n\n'
   fi
@@ -3146,15 +2262,11 @@ generar_informe() {
   printf '### JavaScript / Node.js\n\n'
   printf '```bash\necho %s | node scripts/javascript/bip39_dados.js\n```\n\n' "$tiradas"
 
-  printf '### C# (%s)\n\n' "$CS_LABEL"
-  printf '```bash\n%s\necho %s | %s\n```\n\n' "$CS_CMD_SETUP" "$tiradas" "$CS_CMD_RUN"
-
   printf '## Palabras resultantes\n\n'
   printf '| Implementacion | Palabras (1 -> 12) |\n'
   printf '|---|---|\n'
   printf '| Python | %s |\n' "$pal_py"
-  printf '| JavaScript | %s |\n' "$pal_js"
-  printf '| C# | %s |\n\n' "$pal_cs"
+  printf '| JavaScript | %s |\n\n' "$pal_js"
 
   if [[ "$coincide" == "si" ]]; then
     printf '## Entropia en distintos formatos\n\n'
@@ -3170,8 +2282,6 @@ generar_informe() {
     formatos_md "$hex_py"
     printf '\n### JavaScript\n\n| Formato | Valor |\n|---|---|\n'
     formatos_md "$hex_js"
-    printf '\n### C#\n\n| Formato | Valor |\n|---|---|\n'
-    formatos_md "$hex_cs"
     printf '\n'
   fi
 
@@ -3189,17 +2299,14 @@ for ((i = 1; i <= N_RONDAS; i++)); do
 
   salida_py="$(printf '%s\n' "$tiradas" | python3 "$PY")"
   salida_js="$(printf '%s\n' "$tiradas" | node "$JS")"
-  salida_cs="$(printf '%s\n' "$tiradas" | cs_run)"
 
   r_py="$(extraer "$salida_py")"
   r_js="$(extraer "$salida_js")"
-  r_cs="$(extraer "$salida_cs")"
 
   hex_py="${r_py%%|*}"; pal_py="${r_py#*|}"
   hex_js="${r_js%%|*}"; pal_js="${r_js#*|}"
-  hex_cs="${r_cs%%|*}"; pal_cs="${r_cs#*|}"
 
-  if [[ "$r_py" == "$r_js" && "$r_js" == "$r_cs" ]]; then
+  if [[ "$r_py" == "$r_js" ]]; then
     coincide="si"
     informe="$INFORMES/${hex_py}.md"
   else
@@ -3209,7 +2316,7 @@ for ((i = 1; i <= N_RONDAS; i++)); do
   fi
 
   generar_informe "$i" "$tiradas" "$coincide" \
-    "$hex_py" "$pal_py" "$hex_js" "$pal_js" "$hex_cs" "$pal_cs" > "$informe"
+    "$hex_py" "$pal_py" "$hex_js" "$pal_js" > "$informe"
 
   if [[ "$coincide" == "si" ]]; then
     echo "ronda $i: OK  (entropia $hex_py) -> ${informe#"$ROOT"/}"
@@ -3218,13 +2325,12 @@ for ((i = 1; i <= N_RONDAS; i++)); do
     echo "  tiradas : $tiradas"
     echo "  python  : $r_py"
     echo "  node    : $r_js"
-    echo "  csharp  : $r_cs"
   fi
 done
 
 echo
 if [[ $fallos -eq 0 ]]; then
-  echo "OK: $N_RONDAS rondas, las 3 implementaciones coincidieron siempre."
+  echo "OK: $N_RONDAS rondas, las 2 implementaciones coincidieron siempre."
   echo "Informes en: $INFORMES"
   exit 0
 else
@@ -3300,8 +2406,7 @@ const es = function(){ return document.documentElement.getAttribute('data-lang')
 const HASHES = {
   'bip39_dados.py':'66d9f0b42288760e7f228e59ffa4e51f1fc9fa509b36f5f1900aedb1fab02d20',
   'bip39_dados.js':'19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9',
-  'bip39_dados.cs':'de49a113e47e2afbaf3649abb2a01102618c4027521e4022bf92de11d082a726',
-  'comparar_implementaciones.sh':'9d0a7c26e24c09dba90ac68e236437695c947418efb9765872e4e932ecdb84d7'
+  'comparar_implementaciones.sh':'119902d835e43a835873c0c7f79fd816f371613f7be18f7910689b45ea884442'
 };
 
 /* ---------- resaltado de sintaxis ----------
@@ -3313,14 +2418,14 @@ const HASHES = {
    Recorre el texto carácter a carácter en vez de aplicar expresiones
    regulares sueltas. Es la diferencia entre acertar y fallar en los casos
    que de verdad aparecen en estos ficheros: la lista de 2048 palabras vive
-   dentro de una cadena literal en los tres lenguajes, y un '#' dentro de
+   dentro de una cadena literal en los dos lenguajes, y un '#' dentro de
    ${var#patron} no abre ningún comentario. */
 function escaparHtml(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function resaltar(txt, tipo){
-  const py = tipo==='py', sh = tipo==='sh', cs = tipo==='cs', js = tipo==='js';
+  const py = tipo==='py', sh = tipo==='sh', js = tipo==='js';
   const marca = (py||sh) ? '#' : '//';
   const salida = [];
   let buf = [], i = 0;
@@ -3340,21 +2445,10 @@ function resaltar(txt, tipo){
       emite('c', txt.slice(i, j)); i = j; continue;
     }
 
-    /* Comentario de bloque, solo en JavaScript y C#. */
-    if ((js||cs) && txt.startsWith('/*', i)){
+    /* Comentario de bloque, solo en JavaScript. */
+    if (js && txt.startsWith('/*', i)){
       let j = txt.indexOf('*/', i + 2); j = j < 0 ? txt.length : j + 2;
       emite('c', txt.slice(i, j)); i = j; continue;
-    }
-
-    /* Cadena literal de C#: @"..." ocupa varias líneas y escapa las comillas
-       duplicándolas. Ahí es donde vive la lista de palabras. */
-    if (cs && txt.startsWith('@"', i)){
-      let j = i + 2;
-      while (j < txt.length){
-        if (txt[j] === '"'){ if (txt[j+1] === '"'){ j += 2; continue; } j++; break; }
-        j++;
-      }
-      emite('s', txt.slice(i, j)); i = j; continue;
     }
 
     /* Docstring de Python. */
@@ -3386,7 +2480,7 @@ function resaltar(txt, tipo){
 /* La extensión del fichero decide las reglas. */
 function tipoDe(fichero){
   const ext = fichero.split('.').pop();
-  return ext === 'py' || ext === 'js' || ext === 'cs' || ext === 'sh' ? ext : '';
+  return ext === 'py' || ext === 'js' || ext === 'sh' ? ext : '';
 }
 
 /* El HTML obliga a un salto de línea tras la etiqueta de apertura; se quita

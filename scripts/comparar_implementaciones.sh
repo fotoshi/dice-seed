@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # comparar_implementaciones.sh
 #
-# Comprueba que las 3 implementaciones (Python, JavaScript, C#) producen
+# Comprueba que las 2 implementaciones (Python, JavaScript) producen
 # EXACTAMENTE las mismas 12 palabras BIP-39 cuando reciben las mismas 50
 # tiradas de dado, y deja un informe en Markdown por cada ronda para poder
 # verificar la entropia a mano con herramientas externas.
 #
-# No instala nada nuevo: reutiliza los mismos interpretes/compiladores que
-# cada script ya necesita para funcionar (python3, node, y mono o dotnet
-# para C#; python3 tambien se usa para las conversiones de base del informe).
-# Genera tiradas de prueba con /dev/urandom, que ya trae el sistema operativo.
+# No instala nada nuevo: reutiliza los mismos interpretes que cada script ya
+# necesita para funcionar (python3 y node; python3 tambien se usa para las
+# conversiones de base del informe). Genera tiradas de prueba con
+# /dev/urandom, que ya trae el sistema operativo.
 #
 # USO:
 #     ./comparar_implementaciones.sh          # 5 rondas aleatorias
@@ -28,7 +28,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PY="$ROOT/python/bip39_dados.py"
 JS="$ROOT/javascript/bip39_dados.js"
-CS="$ROOT/csharp/bip39_dados.cs"
 INFORMES="$ROOT/informes"
 
 N_RONDAS="${1:-5}"
@@ -38,45 +37,17 @@ mkdir -p "$INFORMES"
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# ---------------------------------------------------------------------------
-# Localizar como ejecutar C#: Mono si esta disponible (compila el fichero
-# suelto, sin crear un proyecto), si no dotnet (necesita un proyecto en
-# .NET 6-9). CS_LABEL/CS_CMD_SETUP/CS_CMD_RUN son solo para MOSTRAR en el
-# informe el comando reproducible; cs_run() es lo que de verdad se ejecuta.
-# ---------------------------------------------------------------------------
-if command -v mcs >/dev/null 2>&1 && command -v mono >/dev/null 2>&1; then
-  mcs -r:System.Numerics.dll -out:"$TMPDIR/bip39.exe" "$CS" >/dev/null
-  cs_run() { mono "$TMPDIR/bip39.exe" "$@"; }
-  CS_LABEL="Mono"
-  CS_CMD_SETUP="mcs -r:System.Numerics.dll -out:bip39_dados.exe scripts/csharp/bip39_dados.cs"
-  CS_CMD_RUN="mono bip39_dados.exe"
-elif command -v dotnet >/dev/null 2>&1; then
-  PROJ="$TMPDIR/csproj"
-  dotnet new console -o "$PROJ" >/dev/null
-  cp "$CS" "$PROJ/Program.cs"
-  dotnet build "$PROJ" -c Release -o "$PROJ/out" >/dev/null
-  DLL="$PROJ/out/$(basename "$PROJ").dll"
-  cs_run() { dotnet "$DLL" "$@"; }
-  CS_LABEL="dotnet"
-  CS_CMD_SETUP="dotnet new console -o bip39 && cp scripts/csharp/bip39_dados.cs bip39/Program.cs"
-  CS_CMD_RUN="dotnet run --project bip39"
-else
-  echo "ERROR: no se encontro ni mono ni dotnet. Instala uno de los dos para C#." >&2
-  exit 1
-fi
-
 echo "== Paso 1: autocomprobacion individual (--test) de cada implementacion =="
 python3 "$PY" --test
 node "$JS" --test
-cs_run --test
 echo
 
 # ---------------------------------------------------------------------------
 # Extrae de la salida completa de un programa la linea "Entropia : <hex>" y
 # la lista de 12 palabras, y las junta en un solo string "hex|palabras".
-# Las tres implementaciones imprimen ambas cosas con el mismo formato
+# Las dos implementaciones imprimen ambas cosas con el mismo formato
 # ("Entropia : ..." y "NN. palabra"), asi que un mismo grep/awk vale para
-# las tres.
+# las dos.
 # ---------------------------------------------------------------------------
 extraer() {
   local salida="$1"
@@ -125,7 +96,6 @@ generar_informe() {
   local ronda="$1" tiradas="$2" coincide="$3"
   local hex_py="$4" pal_py="$5"
   local hex_js="$6" pal_js="$7"
-  local hex_cs="$8" pal_cs="$9"
   local fecha
   fecha="$(date '+%Y-%m-%d %H:%M:%S %z')"
 
@@ -138,7 +108,7 @@ generar_informe() {
 
   printf '## Resultado\n\n'
   if [[ "$coincide" == "si" ]]; then
-    printf '**OK** - las 3 implementaciones producen la misma entropia y las mismas 12 palabras.\n\n'
+    printf '**OK** - las 2 implementaciones producen la misma entropia y las mismas 12 palabras.\n\n'
   else
     printf '**DESAJUSTE** - alguna implementacion difiere. No uses este metodo hasta resolverlo.\n\n'
   fi
@@ -152,15 +122,11 @@ generar_informe() {
   printf '### JavaScript / Node.js\n\n'
   printf '```bash\necho %s | node scripts/javascript/bip39_dados.js\n```\n\n' "$tiradas"
 
-  printf '### C# (%s)\n\n' "$CS_LABEL"
-  printf '```bash\n%s\necho %s | %s\n```\n\n' "$CS_CMD_SETUP" "$tiradas" "$CS_CMD_RUN"
-
   printf '## Palabras resultantes\n\n'
   printf '| Implementacion | Palabras (1 -> 12) |\n'
   printf '|---|---|\n'
   printf '| Python | %s |\n' "$pal_py"
-  printf '| JavaScript | %s |\n' "$pal_js"
-  printf '| C# | %s |\n\n' "$pal_cs"
+  printf '| JavaScript | %s |\n\n' "$pal_js"
 
   if [[ "$coincide" == "si" ]]; then
     printf '## Entropia en distintos formatos\n\n'
@@ -176,8 +142,6 @@ generar_informe() {
     formatos_md "$hex_py"
     printf '\n### JavaScript\n\n| Formato | Valor |\n|---|---|\n'
     formatos_md "$hex_js"
-    printf '\n### C#\n\n| Formato | Valor |\n|---|---|\n'
-    formatos_md "$hex_cs"
     printf '\n'
   fi
 
@@ -195,17 +159,14 @@ for ((i = 1; i <= N_RONDAS; i++)); do
 
   salida_py="$(printf '%s\n' "$tiradas" | python3 "$PY")"
   salida_js="$(printf '%s\n' "$tiradas" | node "$JS")"
-  salida_cs="$(printf '%s\n' "$tiradas" | cs_run)"
 
   r_py="$(extraer "$salida_py")"
   r_js="$(extraer "$salida_js")"
-  r_cs="$(extraer "$salida_cs")"
 
   hex_py="${r_py%%|*}"; pal_py="${r_py#*|}"
   hex_js="${r_js%%|*}"; pal_js="${r_js#*|}"
-  hex_cs="${r_cs%%|*}"; pal_cs="${r_cs#*|}"
 
-  if [[ "$r_py" == "$r_js" && "$r_js" == "$r_cs" ]]; then
+  if [[ "$r_py" == "$r_js" ]]; then
     coincide="si"
     informe="$INFORMES/${hex_py}.md"
   else
@@ -215,7 +176,7 @@ for ((i = 1; i <= N_RONDAS; i++)); do
   fi
 
   generar_informe "$i" "$tiradas" "$coincide" \
-    "$hex_py" "$pal_py" "$hex_js" "$pal_js" "$hex_cs" "$pal_cs" > "$informe"
+    "$hex_py" "$pal_py" "$hex_js" "$pal_js" > "$informe"
 
   if [[ "$coincide" == "si" ]]; then
     echo "ronda $i: OK  (entropia $hex_py) -> ${informe#"$ROOT"/}"
@@ -224,13 +185,12 @@ for ((i = 1; i <= N_RONDAS; i++)); do
     echo "  tiradas : $tiradas"
     echo "  python  : $r_py"
     echo "  node    : $r_js"
-    echo "  csharp  : $r_cs"
   fi
 done
 
 echo
 if [[ $fallos -eq 0 ]]; then
-  echo "OK: $N_RONDAS rondas, las 3 implementaciones coincidieron siempre."
+  echo "OK: $N_RONDAS rondas, las 2 implementaciones coincidieron siempre."
   echo "Informes en: $INFORMES"
   exit 0
 else

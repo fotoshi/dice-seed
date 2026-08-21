@@ -1,10 +1,10 @@
 # dice-seed
 
 **Una semilla BIP-39 de 12 palabras a partir de 50 tiradas de un dado de 6 caras.**
-Tres implementaciones equivalentes, sin dependencias, comentadas paso a paso para
+Dos implementaciones equivalentes, sin dependencias, comentadas paso a paso para
 poder auditarlas y enseñarlas.
 
-**A 12-word BIP-39 seed from 50 rolls of a six-sided die.** Three equivalent
+**A 12-word BIP-39 seed from 50 rolls of a six-sided die.** Two equivalent
 implementations, no dependencies, commented step by step so they can be audited
 and taught.
 
@@ -28,9 +28,9 @@ números aleatorios es bueno y honesto. No puedes comprobar ninguna de las dos
 cosas. Con un dado sí: la aleatoriedad la produces tú, delante de ti, y cada paso
 del cálculo se puede verificar a mano.
 
-Este repositorio contiene el mismo algoritmo en **Python, JavaScript y C#**, más
+Este repositorio contiene el mismo algoritmo en **Python y JavaScript**, más
 una web didáctica que explica el método. No hay dependencias externas en ninguno
-de los tres: solo la biblioteca estándar del lenguaje.
+de los dos: solo la biblioteca estándar del lenguaje.
 
 ## Aviso de seguridad
 
@@ -52,10 +52,9 @@ python3 bip39_dados.py             # pedir las 50 tiradas
 python3 bip39_dados.py --detalle   # mostrar todos los pasos intermedios
 ```
 
-Equivalentes: `node scripts/javascript/bip39_dados.js`. Para C#, las
-instrucciones de compilación están en `scripts/csharp/INSTRUCCIONES.md` (y en
-la cabecera de `bip39_dados.cs`). Cada carpeta de `scripts/` incluye además un
-`REQUISITOS.md` con lo necesario para ejecutarla.
+Equivalente: `node scripts/javascript/bip39_dados.js`. Cada carpeta de `scripts/`
+incluye además un `REQUISITOS.md` con lo necesario para ejecutarla y un
+`INSTRUCCIONES.md` con el paso a paso.
 
 El modo `--detalle` imprime N, el recorte a 128 bits, el checksum y los 12 grupos
 de bits. Es para **aprender y enseñar**, no para generar una semilla real.
@@ -127,7 +126,6 @@ que la huella coincida y que la identidad sea exactamente
 |---|---|---|
 | Python | 3.2 | Preinstalado en macOS y Linux |
 | Node.js | 10.4 | Necesita `BigInt` |
-| C# | .NET Framework 4.6 · .NET 6+ · Mono | Compila con `-langversion:6` |
 
 Ninguno necesita instalar paquetes.
 
@@ -155,17 +153,16 @@ esperadas, aun así menos que 77).
 |---|---|
 | `scripts/python/bip39_dados.py` | Implementación en Python 3 |
 | `scripts/javascript/bip39_dados.js` | Implementación en Node.js |
-| `scripts/csharp/bip39_dados.cs` | Implementación en C# / .NET |
 | `scripts/*/REQUISITOS.md` | Qué necesitas instalado para cada lenguaje |
-| `scripts/*/INSTRUCCIONES.md` | Cómo compilar y lanzar cada implementación |
-| `scripts/comparar_implementaciones.sh` | Comprueba que las tres dan las mismas palabras con las mismas tiradas |
+| `scripts/*/INSTRUCCIONES.md` | Cómo lanzar cada implementación |
+| `scripts/comparar_implementaciones.sh` | Comprueba que las dos dan las mismas palabras con las mismas tiradas |
 | `index.html` | Web didáctica bilingüe, autocontenida |
 | `tutorial_bip39_dados.md` | Tutorial largo con el código explicado |
 | `FIRMAR.md` | Cómo se firma y se verifica este repositorio |
 | `ADN-clave-publica.asc` | Clave pública GPG |
 | `SHA256SUMS` · `.asc` · `.ots` | Hashes, firma y sello temporal |
 
-`index.html` lleva los tres scripts incrustados y calcula su SHA-256 en el
+`index.html` lleva los dos scripts y el comparador incrustados, y calcula su SHA-256 en el
 navegador. **Puedes guardarlo y llevártelo al ordenador sin red**: funciona
 entero sin conexión, con explicación, código y descarga.
 
@@ -199,8 +196,8 @@ generator is both sound and honest. You can verify neither. With a die you can:
 you produce the randomness yourself, in front of you, and every step of the
 calculation can be checked by hand.
 
-This repository holds the same algorithm in **Python, JavaScript and C#**, plus a
-teaching site that explains the method. None of the three has external
+This repository holds the same algorithm in **Python and JavaScript**, plus a
+teaching site that explains the method. Neither has external
 dependencies — standard library only.
 
 ## Safety notice
@@ -223,10 +220,9 @@ python3 bip39_dados.py             # prompt for the 50 rolls
 python3 bip39_dados.py --detalle   # print every intermediate value
 ```
 
-Equivalents: `node scripts/javascript/bip39_dados.js`. For C#, build
-instructions are in `scripts/csharp/INSTRUCCIONES.md` (and in the header of
-`bip39_dados.cs`). Each folder under `scripts/` also ships a `REQUISITOS.md`
-with what you need installed to run it.
+Equivalent: `node scripts/javascript/bip39_dados.js`. Each folder under
+`scripts/` also ships a `REQUISITOS.md` with what you need installed to run it,
+and an `INSTRUCCIONES.md` with the step-by-step.
 
 `--detalle` prints N, the trim to 128 bits, the checksum and the 12 bit groups.
 It's for **learning and teaching**, not for generating a real seed.
@@ -298,7 +294,6 @@ fingerprint matches, and that the identity reads exactly
 |---|---|---|
 | Python | 3.2 | Preinstalled on macOS and Linux |
 | Node.js | 10.4 | Needs `BigInt` |
-| C# | .NET Framework 4.6 · .NET 6+ · Mono | Builds with `-langversion:6` |
 
 None of them requires installing packages.
 
@@ -325,17 +320,16 @@ rolls, still fewer than 77).
 |---|---|
 | `scripts/python/bip39_dados.py` | Python 3 implementation |
 | `scripts/javascript/bip39_dados.js` | Node.js implementation |
-| `scripts/csharp/bip39_dados.cs` | C# / .NET implementation |
 | `scripts/*/REQUISITOS.md` | What you need installed for each language |
-| `scripts/*/INSTRUCCIONES.md` | How to build and run each implementation |
-| `scripts/comparar_implementaciones.sh` | Checks that all three give the same words for the same rolls |
+| `scripts/*/INSTRUCCIONES.md` | How to run each implementation |
+| `scripts/comparar_implementaciones.sh` | Checks that both give the same words for the same rolls |
 | `index.html` | Bilingual teaching site, self-contained |
 | `tutorial_bip39_dados.md` | Long-form tutorial (Spanish) |
 | `FIRMAR.md` | How this repository is signed and verified (Spanish) |
 | `ADN-clave-publica.asc` | GPG public key |
 | `SHA256SUMS` · `.asc` · `.ots` | Hashes, signature and timestamp |
 
-`index.html` embeds all three scripts and computes their SHA-256 in the browser.
+`index.html` embeds both scripts and the comparator, and computes their SHA-256 in the browser.
 **You can save it and carry it to your offline computer**: it works entirely
 without a connection — explanation, code and downloads included.
 
