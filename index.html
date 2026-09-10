@@ -219,6 +219,25 @@ pre.code .s{color:var(--syn-string)}
 .field span{color:var(--ink-dim); word-break:break-all}
 @media(max-width:560px){.field{grid-template-columns:1fr; gap:.15rem}}
 
+/* ---------- manual detallado (expandir) ---------- */
+.manual{margin-top:2.6rem}
+.manual summary{
+  cursor:pointer; font-family:var(--mono); font-size:.84rem; letter-spacing:.03em;
+  color:var(--orange-ink); list-style:none; display:inline-flex; align-items:center;
+  gap:.5rem; padding:.5rem 0; user-select:none;
+}
+.manual summary::-webkit-details-marker{display:none}
+.manual summary:hover{color:var(--ink)}
+.manual summary .arw{display:inline-block; transition:transform .15s}
+.manual[open] summary .arw{transform:rotate(90deg)}
+.manual .inner{margin-top:1.8rem; padding-top:1.8rem; border-top:1px solid var(--line)}
+
+/* ---------- pasos sencillos (resumen del metodo) ---------- */
+.simple{display:grid; grid-template-columns:38px 1fr; gap:1.1rem; margin:0 0 1.3rem; align-items:start}
+.simple .body{min-width:0; padding-top:.05rem}
+.simple p{margin:0; color:var(--ink-dim)}
+.simple strong{color:var(--ink)}
+
 /* ---------- checklist ---------- */
 .check{list-style:none; padding:0; margin:1.5rem 0 0; max-width:var(--measure)}
 .check li{position:relative; padding-left:2.3rem; margin:0 0 1rem; line-height:1.6}
@@ -242,7 +261,6 @@ footer a{word-break:break-all}
     <div class="brand">dice<span>-</span>seed</div>
     <nav class="jump" aria-label="Secciones">
       <a href="#metodo" data-l="es">Método</a><a href="#metodo" data-l="en">Method</a>
-      <a href="#balance" data-l="es">Ventajas</a><a href="#balance" data-l="en">Trade-offs</a>
       <a href="#verificar" data-l="es">Verificar</a><a href="#verificar" data-l="en">Verify</a>
     </nav>
     <a class="dlcta" href="#scripts" data-l="es"><span class="full">Descarga </span>Scripts ↓</a>
@@ -286,100 +304,182 @@ footer a{word-break:break-all}
 <!-- ══════════════ MÉTODO ══════════════ -->
 <section id="metodo">
   <span class="eyebrow" data-l="es">Cómo funciona</span><span class="eyebrow" data-l="en">How it works</span>
-  <h2 data-l="es">El método, en cinco pasos</h2>
-  <h2 data-l="en">The method, in five steps</h2>
-  <p data-l="es">BIP-39 es el estándar que convierte una tira de bits aleatorios en palabras memorizables. Lo único que hace falta añadir es una fuente de aleatoriedad que puedas auditar: un dado.</p>
-  <p data-l="en">BIP-39 is the standard that turns a string of random bits into memorable words. The only thing you need to supply is a source of randomness you can audit: a die.</p>
+  <h2 data-l="es">El método, en pocas palabras</h2>
+  <h2 data-l="en">The method, in short</h2>
+  <p data-l="es">BIP-39 es el estándar que convierte aleatoriedad en 12 palabras memorizables. Aquí esa aleatoriedad la produces tú, con un dado en la mano. Así es todo el proceso, de principio a fin:</p>
+  <p data-l="en">BIP-39 is the standard that turns randomness into 12 memorable words. Here you produce that randomness yourself, die in hand. Here's the whole process, start to finish:</p>
 
   <!-- paso 1 -->
-  <div class="step">
+  <div class="simple">
     <span class="die" aria-hidden="true"><i class="c5"></i></span>
     <div class="body">
-      <h3 data-l="es">Las tiradas forman un número en base 6</h3>
-      <h3 data-l="en">The rolls form a number in base 6</h3>
-      <p data-l="es">Un dado de 6 caras aporta log₂(6) = <strong>2,585 bits</strong> por tirada, así que 50 tiradas dan 129,25 bits: suficiente para los 128 que necesitamos. El dado no tiene cara 0, así que a cada tirada se le resta 1.</p>
-      <p data-l="en">A six-sided die yields log₂(6) = <strong>2.585 bits</strong> per roll, so 50 rolls give 129.25 bits — enough for the 128 we need. A die has no zero face, so each roll has 1 subtracted from it.</p>
-      <div class="calc">3 1 6 4  →  <b>2 0 5 3</b>
-
-N = 2·6³ + 0·6² + 5·6¹ + 3·6⁰ = <b>465</b></div>
-      <p data-l="es">La <strong>primera tirada es el dígito más significativo</strong>. Cambiar el orden de las tiradas produce una semilla completamente distinta, así que la secuencia importa tanto como los números.</p>
-      <p data-l="en">The <strong>first roll is the most significant digit</strong>. Reordering the rolls produces a completely different seed, so the sequence matters as much as the numbers.</p>
+      <p data-l="es"><strong>Descarga uno de los dos scripts</strong> —o los dos, para comparar— y guárdalos en un USB en el que confíes. Ese USB se va a un ordenador sin conexión: wifi apagado, cable de red desconectado y, si puedes, arrancado desde un sistema «live» que se olvide de todo al apagarse. Para esto recomendamos <strong>Tails</strong>: no es obligatorio, pero está diseñado precisamente para no dejar rastro y viene ya bastante asegurado por defecto. Fuera de eso no hace falta nada especial: vale cualquier portátil viejo, siempre que en ese momento esté completamente aislado. A partir de aquí, todo ocurre en esa máquina y no sale de ella.</p>
+      <p data-l="en"><strong>Download one of the two scripts</strong> — or both, to cross-check — and save them to a USB drive you trust. That drive goes to a computer with no connection: wifi off, network cable unplugged, and ideally booted from a live system that forgets everything on shutdown. We recommend <strong>Tails</strong> for this: it's not required, but it's built specifically to leave no trace and comes reasonably secure by default. Beyond that, nothing special is required — any old laptop works, as long as it's fully isolated at that moment. From here on, everything happens on that machine and stays there.</p>
+      <div class="calc" data-l="es">Descarga y guía oficial para crear el USB de arranque de Tails:
+tails.net/install</div>
+      <div class="calc" data-l="en">Official download and guide to build the Tails boot USB:
+tails.net/install</div>
     </div>
   </div>
 
   <!-- paso 2 -->
-  <div class="step">
+  <div class="simple">
     <span class="die" aria-hidden="true"><i class="c1"></i><i class="c9"></i></span>
     <div class="body">
-      <h3 data-l="es">Recortar a 128 bits exactos</h3>
-      <h3 data-l="en">Trim to exactly 128 bits</h3>
-      <p data-l="es">Sobran 1,25 bits, así que nos quedamos con los 128 más bajos. Eso introduce un sesgo mínimo: la entropía efectiva baja a 127,97 bits en vez de 128.</p>
-      <p data-l="en">There's a 1.25-bit surplus, so we keep the lowest 128. That introduces a tiny bias: effective entropy drops to 127.97 bits instead of 128.</p>
-      <div class="calc">6⁵⁰ / 2¹²⁸ = 2,375   →   <b data-l="es">se pierden 0,03 bits</b><b data-l="en">0.03 bits lost</b></div>
-      <p data-l="es">Los scripts incluyen un bloque comentado que elimina el sesgo por completo mediante rechazo, a cambio de repetir las 50 tiradas el 15,8&nbsp;% de las veces.</p>
-      <p data-l="en">The scripts include a commented-out block that removes the bias entirely by rejection, at the cost of re-rolling all 50 dice 15.8% of the time.</p>
+      <p data-l="es"><strong>Tira un dado de verdad 50 veces</strong> y apunta cada número en un papel cualquiera. Ese papel es solo un borrador de trabajo: en cuanto tengas tus 12 palabras, lo destruyes. Esas 50 tiradas por sí solas no abren ninguna cartera —son la materia prima, no la semilla— así que no hay ningún motivo para conservarlas.</p>
+      <p data-l="en"><strong>Roll a real die 50 times</strong> and jot down each number on any scrap of paper. That paper is just a working draft: as soon as you have your 12 words, destroy it. Those 50 rolls on their own don't open any wallet — they're the raw material, not the seed — so there's no reason to keep them.</p>
+      <div class="calc" data-l="es">Ejemplo de tiradas (no las reutilices):
+3 1 6 4 2 5 6 1 4 3  2 6 5 1 3 4 6 2 1 5
+3 6 4 2 1 5 6 3 4 1  2 6 5 3 1 4 6 2 5 3
+1 6 4 2 5 3 1 6 4 2</div>
+      <div class="calc" data-l="en">Example rolls (don't reuse them):
+3 1 6 4 2 5 6 1 4 3  2 6 5 1 3 4 6 2 1 5
+3 6 4 2 1 5 6 3 4 1  2 6 5 3 1 4 6 2 5 3
+1 6 4 2 5 3 1 6 4 2</div>
     </div>
   </div>
 
   <!-- paso 3 -->
-  <div class="step">
+  <div class="simple">
     <span class="die" aria-hidden="true"><i class="c1"></i><i class="c5"></i><i class="c9"></i></span>
     <div class="body">
-      <h3 data-l="es">Añadir 4 bits de checksum</h3>
-      <h3 data-l="en">Add 4 checksum bits</h3>
-      <p data-l="es">Se calcula SHA-256 de la entropía y se toman los <strong>4 primeros bits del resultado</strong>. No aportan seguridad: sirven para que, si copias mal una palabra, la cartera rechace la frase en vez de abrir en silencio una cuenta vacía que no es la tuya.</p>
-      <p data-l="en">Take SHA-256 of the entropy and keep the <strong>first 4 bits of the result</strong>. They add no security — they exist so that if you mis-copy a word, your wallet rejects the phrase instead of silently opening an empty account that isn't yours.</p>
-      <div class="calc">SHA-256(<span data-l="es">entropía</span><span data-l="en">entropy</span>) = <b>05</b>fda87a…
-
-byte 0x05 = 0000 0101
-             <b>^^^^</b>  ← checksum</div>
+      <p data-l="es"><strong>Lanza el script</strong> en ese ordenador desconectado e introduce las 50 tiradas cuando te las pida. Antes de continuar, repasa dos veces lo que has escrito contra tu papel: un solo número cambiado da una semilla completamente distinta, y el script no tiene forma de avisarte de un despiste.</p>
+      <p data-l="en"><strong>Run the script</strong> on that offline computer and enter the 50 rolls when it asks for them. Before moving on, check what you typed against your paper twice: a single wrong digit produces a completely different seed, and the script has no way of warning you about a slip.</p>
+      <div class="calc">python3 bip39_dados.py
+node bip39_dados.js</div>
     </div>
   </div>
 
-  <!-- paso 4 — FIRMA VISUAL -->
-  <div class="step">
+  <!-- paso 4 -->
+  <div class="simple">
     <span class="die" aria-hidden="true"><i class="c1"></i><i class="c3"></i><i class="c7"></i><i class="c9"></i></span>
     <div class="body">
-      <h3 data-l="es">Partir los 132 bits en 12 grupos de 11</h3>
-      <h3 data-l="en">Split the 132 bits into 12 groups of 11</h3>
-      <p data-l="es">La lista oficial tiene <strong>2048 = 2¹¹</strong> palabras, así que cada palabra codifica exactamente 11 bits. Y 128 + 4 = 132 = 12 × 11, sin que sobre ni falte un bit. Todo el diseño de BIP-39 gira en torno a esa división limpia.</p>
-      <p data-l="en">The official list has <strong>2048 = 2¹¹</strong> words, so each word encodes exactly 11 bits. And 128 + 4 = 132 = 12 × 11, with not a single bit left over. BIP-39's whole design turns on that clean division.</p>
-
-      <div class="splitter">
-        <div class="eyebrow" data-l="es">Pasa el ratón por un grupo o una palabra</div>
-        <div class="eyebrow" data-l="en">Hover a group or a word</div>
-        <div class="bitstring" id="bits"></div>
-        <div class="wordgrid" id="words"></div>
-        <p style="font-size:.78rem;color:var(--ink-faint);margin:1rem 0 0;max-width:none" data-l="es">Los 4 últimos bits (recuadro rojo) son el checksum. Ejemplo público de demostración: <strong>nunca uses esta semilla</strong>.</p>
-        <p style="font-size:.78rem;color:var(--ink-faint);margin:1rem 0 0;max-width:none" data-l="en">The last 4 bits (red outline) are the checksum. Public demo example: <strong>never use this seed</strong>.</p>
-      </div>
+      <p data-l="es">El script te <strong>devuelve 12 palabras</strong> en inglés, en un orden concreto. Anótalas a mano, en ese mismo orden, en un papel que esta vez sí vas a conservar. Ese papel es tu semilla.</p>
+      <p data-l="en">The script <strong>gives you back 12 words</strong> in English, in a specific order. Write them down by hand, in that same order, on paper you will actually keep this time. That paper is your seed.</p>
+      <div class="calc" data-l="es">Ejemplo de palabras (demo pública, nunca las uses):
+surge maze purity misery seed suspect
+because camp moment sea foil hybrid</div>
+      <div class="calc" data-l="en">Example words (public demo, never use them):
+surge maze purity misery seed suspect
+because camp moment sea foil hybrid</div>
     </div>
   </div>
 
   <!-- paso 5 -->
-  <div class="step">
+  <div class="simple">
     <span class="die" aria-hidden="true"><i class="c1"></i><i class="c3"></i><i class="c5"></i><i class="c7"></i><i class="c9"></i></span>
     <div class="body">
-      <h3 data-l="es">Cada número es una posición en la lista</h3>
-      <h3 data-l="en">Each number is a position in the list</h3>
-      <p data-l="es">El índice se busca tal cual en la lista oficial de 2048 palabras. Un detalle útil: <strong>las 4 primeras letras de cada palabra son únicas</strong>, así que puedes apuntar solo cuatro letras sin perder información — práctico si grabas la semilla en metal.</p>
-      <p data-l="en">The index is looked up directly in the official 2048-word list. A useful detail: <strong>the first 4 letters of every word are unique</strong>, so you can write down just four letters without losing information — handy when stamping a seed into metal.</p>
-      <div class="note">
-        <span class="tag" data-l="es">La idea que lo explica todo</span><span class="tag" data-l="en">The idea that ties it together</span>
-        <p data-l="es">Los pasos 1 y 4 son <strong>la misma operación en sentidos opuestos</strong>: una conversión de base. Primero <em>leemos</em> los dados en base 6 para construir un número; después <em>escribimos</em> ese número en base 2048 para obtener las palabras.</p>
-        <p data-l="en">Steps 1 and 4 are <strong>the same operation in opposite directions</strong>: a base conversion. First we <em>read</em> the dice in base 6 to build a number; then we <em>write</em> that number in base 2048 to get the words.</p>
-      </div>
+      <p data-l="es"><strong>Extra muy recomendable:</strong> añade a tu semilla una <strong>passphrase</strong> propia de al menos 22 caracteres, mezclando mayúsculas, minúsculas, números y algún símbolo. Es una clave adicional que memorizas y que nunca escribes junto a las 12 palabras: si alguien encuentra tu papel, sin la passphrase no tiene nada. A cambio, si la olvidas, la semilla queda inservible para siempre, así que cuídala tanto como las palabras.</p>
+      <p data-l="en"><strong>A highly recommended extra:</strong> add your own <strong>passphrase</strong> to the seed, at least 22 characters long, mixing upper and lower case, numbers and a symbol or two. It's an additional key you memorise and never write down next to the 12 words: if someone finds your paper, without the passphrase they have nothing. The trade-off is that if you forget it, the seed is gone for good — so guard it as carefully as the words themselves.</p>
+      <div class="calc" data-l="es">Ejemplo de passphrase (no la reutilices):
+Tr4ct0r!Naranja_87#Luna</div>
+      <div class="calc" data-l="en">Example passphrase (don't reuse it):
+Tr4ct0r!Naranja_87#Luna</div>
     </div>
   </div>
+
+  <details class="manual">
+    <summary>
+      <span class="arw" aria-hidden="true">→</span>
+      <span data-l="es">¿Por qué funciona? Ver las matemáticas del método (manual detallado)</span>
+      <span data-l="en">Why does it work? See the method's math (detailed manual)</span>
+    </summary>
+
+    <div class="inner">
+      <!-- paso 1 -->
+      <div class="step">
+        <span class="die" aria-hidden="true"><i class="c5"></i></span>
+        <div class="body">
+          <h3 data-l="es">Las tiradas forman un número en base 6</h3>
+          <h3 data-l="en">The rolls form a number in base 6</h3>
+          <p data-l="es">Un dado de 6 caras aporta log₂(6) = <strong>2,585 bits</strong> por tirada, así que 50 tiradas dan 129,25 bits: suficiente para los 128 que necesitamos. El dado no tiene cara 0, así que a cada tirada se le resta 1.</p>
+          <p data-l="en">A six-sided die yields log₂(6) = <strong>2.585 bits</strong> per roll, so 50 rolls give 129.25 bits — enough for the 128 we need. A die has no zero face, so each roll has 1 subtracted from it.</p>
+          <div class="calc">3 1 6 4  →  <b>2 0 5 3</b>
+
+N = 2·6³ + 0·6² + 5·6¹ + 3·6⁰ = <b>465</b></div>
+          <p data-l="es">La <strong>primera tirada es el dígito más significativo</strong>. Cambiar el orden de las tiradas produce una semilla completamente distinta, así que la secuencia importa tanto como los números.</p>
+          <p data-l="en">The <strong>first roll is the most significant digit</strong>. Reordering the rolls produces a completely different seed, so the sequence matters as much as the numbers.</p>
+        </div>
+      </div>
+
+      <!-- paso 2 -->
+      <div class="step">
+        <span class="die" aria-hidden="true"><i class="c1"></i><i class="c9"></i></span>
+        <div class="body">
+          <h3 data-l="es">Recortar a 128 bits exactos</h3>
+          <h3 data-l="en">Trim to exactly 128 bits</h3>
+          <p data-l="es">Sobran 1,25 bits, así que nos quedamos con los 128 más bajos. Eso introduce un sesgo mínimo: la entropía efectiva baja a 127,97 bits en vez de 128.</p>
+          <p data-l="en">There's a 1.25-bit surplus, so we keep the lowest 128. That introduces a tiny bias: effective entropy drops to 127.97 bits instead of 128.</p>
+          <div class="calc">6⁵⁰ / 2¹²⁸ = 2,375   →   <b data-l="es">se pierden 0,03 bits</b><b data-l="en">0.03 bits lost</b></div>
+          <p data-l="es">Los scripts incluyen un bloque comentado que elimina el sesgo por completo mediante rechazo, a cambio de repetir las 50 tiradas el 15,8&nbsp;% de las veces.</p>
+          <p data-l="en">The scripts include a commented-out block that removes the bias entirely by rejection, at the cost of re-rolling all 50 dice 15.8% of the time.</p>
+        </div>
+      </div>
+
+      <!-- paso 3 -->
+      <div class="step">
+        <span class="die" aria-hidden="true"><i class="c1"></i><i class="c5"></i><i class="c9"></i></span>
+        <div class="body">
+          <h3 data-l="es">Añadir 4 bits de checksum</h3>
+          <h3 data-l="en">Add 4 checksum bits</h3>
+          <p data-l="es">Se calcula SHA-256 de la entropía y se toman los <strong>4 primeros bits del resultado</strong>. No aportan seguridad: sirven para que, si copias mal una palabra, la cartera rechace la frase en vez de abrir en silencio una cuenta vacía que no es la tuya.</p>
+          <p data-l="en">Take SHA-256 of the entropy and keep the <strong>first 4 bits of the result</strong>. They add no security — they exist so that if you mis-copy a word, your wallet rejects the phrase instead of silently opening an empty account that isn't yours.</p>
+          <div class="calc">SHA-256(<span data-l="es">entropía</span><span data-l="en">entropy</span>) = <b>05</b>fda87a…
+
+byte 0x05 = 0000 0101
+             <b>^^^^</b>  ← checksum</div>
+        </div>
+      </div>
+
+      <!-- paso 4 — FIRMA VISUAL -->
+      <div class="step">
+        <span class="die" aria-hidden="true"><i class="c1"></i><i class="c3"></i><i class="c7"></i><i class="c9"></i></span>
+        <div class="body">
+          <h3 data-l="es">Partir los 132 bits en 12 grupos de 11</h3>
+          <h3 data-l="en">Split the 132 bits into 12 groups of 11</h3>
+          <p data-l="es">La lista oficial tiene <strong>2048 = 2¹¹</strong> palabras, así que cada palabra codifica exactamente 11 bits. Y 128 + 4 = 132 = 12 × 11, sin que sobre ni falte un bit. Todo el diseño de BIP-39 gira en torno a esa división limpia.</p>
+          <p data-l="en">The official list has <strong>2048 = 2¹¹</strong> words, so each word encodes exactly 11 bits. And 128 + 4 = 132 = 12 × 11, with not a single bit left over. BIP-39's whole design turns on that clean division.</p>
+
+          <div class="splitter">
+            <div class="eyebrow" data-l="es">Pasa el ratón por un grupo o una palabra</div>
+            <div class="eyebrow" data-l="en">Hover a group or a word</div>
+            <div class="bitstring" id="bits"></div>
+            <div class="wordgrid" id="words"></div>
+            <p style="font-size:.78rem;color:var(--ink-faint);margin:1rem 0 0;max-width:none" data-l="es">Los 4 últimos bits (recuadro rojo) son el checksum. Ejemplo público de demostración: <strong>nunca uses esta semilla</strong>.</p>
+            <p style="font-size:.78rem;color:var(--ink-faint);margin:1rem 0 0;max-width:none" data-l="en">The last 4 bits (red outline) are the checksum. Public demo example: <strong>never use this seed</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- paso 5 -->
+      <div class="step">
+        <span class="die" aria-hidden="true"><i class="c1"></i><i class="c3"></i><i class="c5"></i><i class="c7"></i><i class="c9"></i></span>
+        <div class="body">
+          <h3 data-l="es">Cada número es una posición en la lista</h3>
+          <h3 data-l="en">Each number is a position in the list</h3>
+          <p data-l="es">El índice se busca tal cual en la lista oficial de 2048 palabras. Un detalle útil: <strong>las 4 primeras letras de cada palabra son únicas</strong>, así que puedes apuntar solo cuatro letras sin perder información — práctico si grabas la semilla en metal.</p>
+          <p data-l="en">The index is looked up directly in the official 2048-word list. A useful detail: <strong>the first 4 letters of every word are unique</strong>, so you can write down just four letters without losing information — handy when stamping a seed into metal.</p>
+          <div class="note">
+            <span class="tag" data-l="es">La idea que lo explica todo</span><span class="tag" data-l="en">The idea that ties it together</span>
+            <p data-l="es">Los pasos 1 y 4 son <strong>la misma operación en sentidos opuestos</strong>: una conversión de base. Primero <em>leemos</em> los dados en base 6 para construir un número; después <em>escribimos</em> ese número en base 2048 para obtener las palabras.</p>
+            <p data-l="en">Steps 1 and 4 are <strong>the same operation in opposite directions</strong>: a base conversion. First we <em>read</em> the dice in base 6 to build a number; then we <em>write</em> that number in base 2048 to get the words.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
 </section>
 
-<!-- ══════════════ VENTAJAS Y DESVENTAJAS ══════════════ -->
-<section id="balance">
-  <span class="eyebrow" data-l="es">Sin adornos</span><span class="eyebrow" data-l="en">Straight talk</span>
-  <h2 data-l="es">Ventajas y desventajas</h2>
-  <h2 data-l="en">Advantages and drawbacks</h2>
-  <p data-l="es">Este método no es la mejor opción para todo el mundo. Antes de usarlo conviene saber qué ganas y qué pierdes frente a las alternativas.</p>
-  <p data-l="en">This method isn't the best option for everyone. Before using it, it's worth knowing what you gain and what you give up compared with the alternatives.</p>
+<!-- ══════════════ SCRIPTS (descarga + ventajas + instrucciones) ══════════════ -->
+<section id="scripts">
+  <span class="eyebrow" data-l="es">Descarga y auditoría</span><span class="eyebrow" data-l="en">Download and audit</span>
+  <h2 data-l="es">Descarga de los scripts</h2>
+  <h2 data-l="en">Download the scripts</h2>
+  <p data-l="es">La misma lógica en dos lenguajes, sin dependencias externas. Antes de decidirte, esto es lo que ganas y lo que pierdes frente a otras opciones.</p>
+  <p data-l="en">The same logic in two languages, no external dependencies. Before you decide, here's what you gain and what you give up compared with other options.</p>
+
+  <h3 data-l="es">Ventajas y desventajas</h3>
+  <h3 data-l="en">Advantages and drawbacks</h3>
 
   <div class="cols">
     <div class="card pro">
@@ -419,39 +519,16 @@ byte 0x05 = 0000 0101
     </div>
   </div>
 
-  <h3 data-l="es">Comparación con la herramienta de Ian Coleman</h3>
-  <h3 data-l="en">Compared with Ian Coleman's tool</h3>
-  <p data-l="es">Es la herramienta BIP-39 más conocida y también acepta dados. En 2020 se reportó que su método de dados tenía sesgo, y <strong>se corrigió en la versión 0.5.0 de octubre de 2020</strong>. No es un fallo actual. Pero la corrección cambió el método, y eso crea una incompatibilidad que conviene conocer.</p>
-  <p data-l="en">It's the best-known BIP-39 tool and it also accepts dice. In 2020 its dice method was reported as biased, and <strong>this was fixed in version 0.5.0, October 2020</strong>. It is not a current flaw. But the fix changed the method, and that creates an incompatibility worth knowing about.</p>
+  <h3 data-l="es">Los dos scripts</h3>
+  <h3 data-l="en">The two scripts</h3>
+  <p data-l="es">Elige el que ya tengas instalado, o el que sepas leer mejor: los dos están comentados paso a paso y producen resultados idénticos. Cada uno incluye <code>--test</code>, que comprueba los vectores oficiales de BIP-39, y <code>--detalle</code>, que imprime todos los valores intermedios.</p>
+  <p data-l="en">Pick whichever you already have installed, or whichever you can read best: both are commented step by step and produce identical results. Each includes <code>--test</code>, which checks the official BIP-39 vectors, and <code>--detalle</code>, which prints every intermediate value.</p>
 
-  <table class="tbl">
-    <thead><tr>
-      <th></th>
-      <th data-l="es">Estos scripts</th><th data-l="en">These scripts</th>
-      <th data-l="es">Ian Coleman 0.5.0+</th><th data-l="en">Ian Coleman 0.5.0+</th>
-    </tr></thead>
-    <tbody>
-      <tr><td data-l="es">Bits por tirada</td><td data-l="en">Bits per roll</td><td>2,585</td><td>1,667</td></tr>
-      <tr><td data-l="es">Tiradas para 128 bits</td><td data-l="en">Rolls for 128 bits</td><td class="good">50, <span data-l="es">siempre</span><span data-l="en">always</span></td><td>~77 <span data-l="es">de media, variable</span><span data-l="en">on average, variable</span></td></tr>
-      <tr><td data-l="es">Sesgo</td><td data-l="en">Bias</td><td>0,03 bits</td><td class="good" data-l="es">ninguno</td><td class="good" data-l="en">none</td></tr>
-      <tr><td data-l="es">Con el bloque de rechazo</td><td data-l="en">With rejection enabled</td><td class="good" data-l="es">ninguno · ~59 tiradas</td><td class="good" data-l="en">none · ~59 rolls</td><td>—</td></tr>
-    </tbody>
-  </table>
-
-  <div class="note warn">
-    <span class="tag" data-l="es">No mezcles las dos herramientas</span><span class="tag" data-l="en">Don't mix the two tools</span>
-    <p data-l="es">Las mismas 50 tiradas dan <strong>palabras distintas</strong> en cada herramienta. Ninguna está mal: BIP-39 estandariza el paso <em>entropía → palabras</em>, pero <strong>no estandariza el paso dados → entropía</strong>. Ahí cada implementación elige. Si quieres verificar tu resultado con otra herramienta, introduce la <strong>entropía en hexadecimal</strong> que imprime el script, nunca las tiradas.</p>
-    <p data-l="en">The same 50 rolls produce <strong>different words</strong> in each tool. Neither is wrong: BIP-39 standardises the <em>entropy → words</em> step, but it <strong>does not standardise dice → entropy</strong>. Each implementation chooses there. To cross-check your result with another tool, feed it the <strong>hex entropy</strong> the script prints — never the dice rolls.</p>
+  <div class="note">
+    <span class="tag" data-l="es">Cómo introducir las tiradas</span><span class="tag" data-l="en">How to enter the rolls</span>
+    <p data-l="es">Puedes escribirlas de una en una o varias juntas, separadas por espacios (<code>3 1 6 4 2 5 6 1 ...</code>). Cualquier carácter que no sea del 1 al 6 se ignora, con un aviso en pantalla salvo para espacios, comas, puntos y guiones.</p>
+    <p data-l="en">You can type them one at a time or several at once, separated by spaces (<code>3 1 6 4 2 5 6 1 ...</code>). Any character outside 1-6 is ignored, with an on-screen warning except for spaces, commas, periods and dashes.</p>
   </div>
-</section>
-
-<!-- ══════════════ SCRIPTS ══════════════ -->
-<section id="scripts">
-  <span class="eyebrow" data-l="es">Descarga y auditoría</span><span class="eyebrow" data-l="en">Download and audit</span>
-  <h2 data-l="es">Los dos scripts</h2>
-  <h2 data-l="en">The two scripts</h2>
-  <p data-l="es">La misma lógica en dos lenguajes. Elige el que ya tengas instalado, o el que sepas leer mejor: los dos están comentados paso a paso y producen resultados idénticos. Cada uno incluye <code>--test</code>, que comprueba los vectores oficiales de BIP-39, y <code>--detalle</code>, que imprime todos los valores intermedios.</p>
-  <p data-l="en">The same logic in two languages. Pick whichever you already have installed, or whichever you can read best: both are commented step by step and produce identical results. Each includes <code>--test</code>, which checks the official BIP-39 vectors, and <code>--detalle</code>, which prints every intermediate value.</p>
 
   <div class="scripts">
     <div class="sc">
@@ -464,11 +541,13 @@ byte 0x05 = 0000 0101
         <li><b>Python 3.2</b> o superior</li>
         <li>Preinstalado en macOS y Linux</li>
         <li>Sin dependencias: solo <code>hashlib</code></li>
+        <li>En Windows: instálalo desde python.org, o usa WSL</li>
       </ul>
       <ul class="reqs" data-l="en">
         <li><b>Python 3.2</b> or later</li>
         <li>Preinstalled on macOS and Linux</li>
         <li>No dependencies: just <code>hashlib</code></li>
+        <li>On Windows: install it from python.org, or use WSL</li>
       </ul>
 
       <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
@@ -507,11 +586,13 @@ python3 bip39_dados.py --detalle</div>
         <li><b>Node.js 10.4</b> o superior</li>
         <li>Necesita <code>BigInt</code>, nativo desde esa versión</li>
         <li>Sin <code>npm install</code>: solo <code>crypto</code> y <code>readline</code></li>
+        <li>Descarga: nodejs.org, se recomienda la versión LTS</li>
       </ul>
       <ul class="reqs" data-l="en">
         <li><b>Node.js 10.4</b> or later</li>
         <li>Needs <code>BigInt</code>, native since that version</li>
         <li>No <code>npm install</code>: just <code>crypto</code> and <code>readline</code></li>
+        <li>Download: nodejs.org, the LTS version is recommended</li>
       </ul>
 
       <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
@@ -563,108 +644,10 @@ node bip39_dados.js --detalle</div>
 
   <div class="note">
     <span class="tag" data-l="es">Esta página se verifica a sí misma</span><span class="tag" data-l="en">This page verifies itself</span>
-    <p data-l="es">Los tres scripts de esta página van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
-    <p data-l="en">All three scripts on this page live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
+    <p data-l="es">Los dos scripts de esta página van dentro de este fichero HTML, y al abrir el visor el navegador calcula su SHA-256 y lo compara con el hash publicado. Si algo no cuadrara, lo verías en rojo. Es el paso 3 del método funcionando delante de ti.</p>
+    <p data-l="en">Both scripts on this page live inside this HTML file, and when you open the viewer your browser computes their SHA-256 and compares it with the published hash. If anything didn't match, you'd see it in red. It's step 3 of the method working in front of you.</p>
     <p data-l="es"><strong>Guarda esta página</strong> (Ctrl-S / Cmd-S) y llévatela al ordenador sin red: funciona entera sin conexión, scripts incluidos. Aun así, la verificación que de verdad cuenta es la firma GPG de abajo.</p>
     <p data-l="en"><strong>Save this page</strong> (Ctrl-S / Cmd-S) and take it to your offline computer: it works completely without a connection, scripts included. Even so, the verification that really counts is the GPG signature below.</p>
-  </div>
-
-  <!-- ---------- comprobación cruzada entre los dos ---------- -->
-  <h3 data-l="es">Comprobar que los dos coinciden</h3>
-  <h3 data-l="en">Checking that both agree</h3>
-  <p data-l="es">Los dos scripts <em>deberían</em> dar exactamente las mismas 12 palabras a partir de las mismas tiradas. «Debería» no es una garantía: un fallo al portar el algoritmo de un lenguaje a otro produciría palabras distintas sin que nada avisara. Este tercer script lo comprueba por ti, y deja un informe escrito de cada prueba.</p>
-  <p data-l="en">Both scripts <em>should</em> produce exactly the same 12 words from the same rolls. "Should" is not a guarantee: a mistake porting the algorithm from one language to another would produce different words with nothing to warn you. This third script checks it for you, and leaves a written report of every test.</p>
-
-  <div class="tool">
-    <h3 style="margin-top:0">comparar_implementaciones.sh</h3>
-
-    <span class="lab" data-l="es">Qué hace, en orden</span><span class="lab" data-l="en">What it does, in order</span>
-    <ol data-l="es" style="font-size:.9rem;color:var(--ink-dim)">
-      <li>Lanza <code>--test</code> en las dos implementaciones: los vectores oficiales de BIP-39.</li>
-      <li>Saca 50 tiradas al azar de <code>/dev/urandom</code>.</li>
-      <li>Se las pasa a Python y Node por la entrada estándar, sin tocarlas.</li>
-      <li>Compara la entropía y las 12 palabras de las dos. Si algo difiere, termina con error.</li>
-      <li>Escribe un informe en <code>scripts/informes/</code>, uno por ronda.</li>
-    </ol>
-    <ol data-l="en" style="font-size:.9rem;color:var(--ink-dim)">
-      <li>Runs <code>--test</code> on both implementations: the official BIP-39 vectors.</li>
-      <li>Draws 50 random rolls from <code>/dev/urandom</code>.</li>
-      <li>Feeds them to Python and Node on standard input, unmodified.</li>
-      <li>Compares the entropy and the 12 words across both. If anything differs, it exits with an error.</li>
-      <li>Writes a report into <code>scripts/informes/</code>, one per round.</li>
-    </ol>
-
-    <div class="toolgrid">
-      <div>
-        <span class="lab" data-l="es">Requisitos</span><span class="lab" data-l="en">Requirements</span>
-        <ul class="reqs" data-l="es">
-          <li><b>bash</b> · macOS, Linux o WSL en Windows</li>
-          <li>Los <b>dos lenguajes a la vez</b>: python3 y node</li>
-          <li>La <b>estructura del repositorio</b>: no funciona con el <code>.sh</code> suelto</li>
-          <li>Ninguna dependencia nueva</li>
-        </ul>
-        <ul class="reqs" data-l="en">
-          <li><b>bash</b> · macOS, Linux or WSL on Windows</li>
-          <li>Both <b>languages at once</b>: python3 and node</li>
-          <li>The <b>repository layout</b>: it won't work as a loose <code>.sh</code></li>
-          <li>No new dependencies</li>
-        </ul>
-      </div>
-      <div>
-        <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
-        <div class="run" data-l="es">git clone https://github.com/fotoshi/dice-seed
-cd dice-seed/scripts
-
-./comparar_implementaciones.sh      <span class="cm"># 5 rondas</span>
-./comparar_implementaciones.sh 20   <span class="cm"># 20 rondas</span></div>
-        <div class="run" data-l="en">git clone https://github.com/fotoshi/dice-seed
-cd dice-seed/scripts
-
-./comparar_implementaciones.sh      <span class="cm"># 5 rounds</span>
-./comparar_implementaciones.sh 20   <span class="cm"># 20 rounds</span></div>
-      </div>
-    </div>
-
-    <span class="lab" data-l="es">Qué contiene cada informe</span><span class="lab" data-l="en">What each report contains</span>
-    <div class="fields" data-l="es">
-      <div class="field"><b>Identificador</b><span>la entropía en hexadecimal, que además da nombre al fichero</span></div>
-      <div class="field"><b>Tiradas</b><span>las 50 usadas, para poder repetir la prueba</span></div>
-      <div class="field"><b>Comandos</b><span>la orden exacta lanzada en cada lenguaje, copiable tal cual</span></div>
-      <div class="field"><b>Palabras</b><span>las 12 de cada implementación, en tabla, para compararlas de un vistazo</span></div>
-      <div class="field"><b>Entropía</b><span>en hexadecimal, binario, base 6 y decimal</span></div>
-    </div>
-    <div class="fields" data-l="en">
-      <div class="field"><b>Identifier</b><span>the hex entropy, which also names the file</span></div>
-      <div class="field"><b>Rolls</b><span>the 50 used, so the test can be repeated</span></div>
-      <div class="field"><b>Commands</b><span>the exact command run in each language, copyable as is</span></div>
-      <div class="field"><b>Words</b><span>the 12 from each implementation, in a table, to compare at a glance</span></div>
-      <div class="field"><b>Entropy</b><span>in hexadecimal, binary, base 6 and decimal</span></div>
-    </div>
-
-    <p data-l="es">Los cuatro formatos de la entropía están para que puedas <strong>verificarla a mano con herramientas externas</strong>: el hexadecimal es el que aceptan otras carteras, la base 6 es la que puedes contrastar contra tus propios dados, y el binario deja ver los 128 bits uno a uno.</p>
-    <p data-l="en">The four entropy formats are there so you can <strong>verify it by hand with external tools</strong>: hex is what other wallets accept, base 6 is what you can check against your own dice, and binary lets you see all 128 bits one by one.</p>
-
-    <div class="calc" data-l="es">Hexadecimal  <b>948f3dfec1f7c1324e7e839d99643090</b>
-Binario      10010100100011110011110111111110…   <b>(128 bits)</b>
-Base 6       12443423241505325514332543542300250225102351221040
-Decimal      197469499237907254833369827531030802576</div>
-    <div class="calc" data-l="en">Hexadecimal  <b>948f3dfec1f7c1324e7e839d99643090</b>
-Binary       10010100100011110011110111111110…   <b>(128 bits)</b>
-Base 6       12443423241505325514332543542300250225102351221040
-Decimal      197469499237907254833369827531030802576</div>
-
-    <div class="note warn">
-      <span class="tag" data-l="es">El informe se escribe en disco</span><span class="tag" data-l="en">The report is written to disk</span>
-      <p data-l="es">Cada informe guarda la entropía y las 12 palabras <strong>en texto plano</strong>. Eso es justo lo que quieres al probar la herramienta con tiradas desechables, y justo lo que <strong>no</strong> quieres con tu semilla real. Usa este script solo para verificar las implementaciones, <strong>nunca con las tiradas que vayas a custodiar</strong>.</p>
-      <p data-l="en">Every report stores the entropy and the 12 words <strong>in plain text</strong>. That's exactly what you want when testing the tool with throwaway rolls, and exactly what you <strong>don't</strong> want with your real seed. Use this script only to verify the implementations — <strong>never with the rolls you intend to keep</strong>.</p>
-    </div>
-
-    <div class="acts">
-      <button class="btn solid" onclick="descargar('comparar_implementaciones.sh')">↓ <span data-l="es">Descargar</span><span data-l="en">Download</span></button>
-      <button class="btn" onclick="verCodigo('comparar_implementaciones.sh')" data-l="es">Ver código</button>
-      <button class="btn" onclick="verCodigo('comparar_implementaciones.sh')" data-l="en">View code</button>
-    </div>
-    <div class="hashline">119902d835e43a835873c0c7f79fd816f371613f7be18f7910689b45ea884442</div>
   </div>
 </section>
 
@@ -707,19 +690,8 @@ sha256sum -c SHA256SUMS                  <b># Linux</b></div>
     <p data-l="en">That warning is <strong>normal</strong>. It only means you haven't marked the key as trusted in your keyring, which almost nobody does. What matters is that it says <code>Good signature</code> and that the fingerprint matches. The identity must be exactly <code>ADN &lt;fotoshi@protonmail.com&gt;</code>; anything else is a reason to stop.</p>
   </div>
 
-  <h3 data-l="es">Sello temporal en Bitcoin (opcional)</h3>
-  <h3 data-l="en">Bitcoin timestamp (optional)</h3>
-  <p data-l="es">La firma dice <em>quién</em>. El sello dice <em>cuándo</em>. Juntos impiden que alguien publique en el futuro una versión maliciosa haciéndola pasar por la original.</p>
-  <p data-l="en">The signature says <em>who</em>. The timestamp says <em>when</em>. Together they stop anyone from later publishing a malicious version and passing it off as the original.</p>
-  <div class="calc">pip3 install opentimestamps-client
-ots verify SHA256SUMS.ots</div>
-</section>
-
-<!-- ══════════════ CHECKLIST ══════════════ -->
-<section id="antes">
-  <span class="eyebrow" data-l="es">Última parada</span><span class="eyebrow" data-l="en">Last stop</span>
-  <h2 data-l="es">Antes de usarlo con dinero real</h2>
-  <h2 data-l="en">Before using this with real money</h2>
+  <h3 data-l="es">Antes de usarlo con dinero real</h3>
+  <h3 data-l="en">Before using this with real money</h3>
 
   <ul class="check" data-l="es">
     <li>El ordenador está <strong>sin red</strong>: WiFi apagado y cable desconectado. Idealmente arrancado desde un USB live que se olvide todo al apagar.</li>
@@ -2133,208 +2105,6 @@ main().catch(err => {
   process.exit(1);
 });
 </script>
-<script type="text/plain" id="src-comparar_implementaciones.sh">
-#!/usr/bin/env bash
-# comparar_implementaciones.sh
-#
-# Comprueba que las 2 implementaciones (Python, JavaScript) producen
-# EXACTAMENTE las mismas 12 palabras BIP-39 cuando reciben las mismas 50
-# tiradas de dado, y deja un informe en Markdown por cada ronda para poder
-# verificar la entropia a mano con herramientas externas.
-#
-# No instala nada nuevo: reutiliza los mismos interpretes que cada script ya
-# necesita para funcionar (python3 y node; python3 tambien se usa para las
-# conversiones de base del informe). Genera tiradas de prueba con
-# /dev/urandom, que ya trae el sistema operativo.
-#
-# USO:
-#     ./comparar_implementaciones.sh          # 5 rondas aleatorias
-#     ./comparar_implementaciones.sh 20        # 20 rondas aleatorias
-#
-# Cada ronda genera un fichero en informes/<entropia-hex>.md (o
-# informes/<entropia-hex>_DESAJUSTE.md si las implementaciones no coinciden)
-# con: las tiradas usadas, el comando exacto para relanzar cada
-# implementacion, las 12 palabras de cada una y la entropia en hexadecimal,
-# binario, base 6 y decimal.
-#
-# Termina con codigo de salida 0 si todo coincide, 1 si alguna ronda difiere.
-
-set -euo pipefail
-
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PY="$ROOT/python/bip39_dados.py"
-JS="$ROOT/javascript/bip39_dados.js"
-INFORMES="$ROOT/informes"
-
-N_RONDAS="${1:-5}"
-
-mkdir -p "$INFORMES"
-
-TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR"' EXIT
-
-echo "== Paso 1: autocomprobacion individual (--test) de cada implementacion =="
-python3 "$PY" --test
-node "$JS" --test
-echo
-
-# ---------------------------------------------------------------------------
-# Extrae de la salida completa de un programa la linea "Entropia : <hex>" y
-# la lista de 12 palabras, y las junta en un solo string "hex|palabras".
-# Las dos implementaciones imprimen ambas cosas con el mismo formato
-# ("Entropia : ..." y "NN. palabra"), asi que un mismo grep/awk vale para
-# las dos.
-# ---------------------------------------------------------------------------
-extraer() {
-  local salida="$1"
-  local hex
-  hex="$(grep -m1 '^Entropia' <<<"$salida" | awk '{print $3}')"
-  local palabras
-  palabras="$(grep -E '^[[:space:]]*[0-9]+\.[[:space:]]' <<<"$salida" | awk '{print $2}' | tr '\n' ' ')"
-  echo "${hex}|${palabras% }"
-}
-
-# ---------------------------------------------------------------------------
-# Imprime (a stdout) las filas de una tabla Markdown con la entropia dada en
-# hexadecimal, binario, base 6 y decimal. Usa python3 porque bash no maneja
-# enteros de 128 bits; python3 ya es una dependencia del proyecto.
-# ---------------------------------------------------------------------------
-formatos_md() {
-  local hex="$1"
-  python3 - "$hex" <<'PYEOF'
-import sys
-hexs = sys.argv[1]
-n = int(hexs, 16)
-binv = bin(n)[2:].zfill(128)
-
-def a_base6(n):
-    if n == 0:
-        return "0"
-    digitos = []
-    while n:
-        digitos.append(str(n % 6))
-        n //= 6
-    return "".join(reversed(digitos))
-
-b6 = a_base6(n).zfill(50)
-print('| Hexadecimal | `%s` |' % hexs)
-print('| Binario (128 bits) | `%s` |' % binv)
-print('| Base 6 (128 bits, digitos 0-5) | `%s` |' % b6)
-print('| Decimal | `%s` |' % n)
-PYEOF
-}
-
-# ---------------------------------------------------------------------------
-# Genera el informe Markdown de una ronda (a stdout; el llamador redirige a
-# fichero). El nombre del fichero lo pone el llamador, basado en la entropia.
-# ---------------------------------------------------------------------------
-generar_informe() {
-  local ronda="$1" tiradas="$2" coincide="$3"
-  local hex_py="$4" pal_py="$5"
-  local hex_js="$6" pal_js="$7"
-  local fecha
-  fecha="$(date '+%Y-%m-%d %H:%M:%S %z')"
-
-  printf '# Informe de comprobacion cruzada BIP-39 dado\n\n'
-  printf '**Identificador (entropia Python, hex):** `%s`\n\n' "$hex_py"
-  printf '**Fecha:** %s\n\n' "$fecha"
-  printf '**Ronda:** %s de %s\n\n' "$ronda" "$N_RONDAS"
-  printf '**Tiradas (50 valores 1-6, tal como se introdujeron):**\n\n'
-  printf '```\n%s\n```\n\n' "$tiradas"
-
-  printf '## Resultado\n\n'
-  if [[ "$coincide" == "si" ]]; then
-    printf '**OK** - las 2 implementaciones producen la misma entropia y las mismas 12 palabras.\n\n'
-  else
-    printf '**DESAJUSTE** - alguna implementacion difiere. No uses este metodo hasta resolverlo.\n\n'
-  fi
-
-  printf '## Comandos ejecutados\n\n'
-  printf 'Lanzados desde la raiz del repositorio, con las tiradas de arriba como entrada estandar.\n\n'
-
-  printf '### Python\n\n'
-  printf '```bash\necho %s | python3 scripts/python/bip39_dados.py\n```\n\n' "$tiradas"
-
-  printf '### JavaScript / Node.js\n\n'
-  printf '```bash\necho %s | node scripts/javascript/bip39_dados.js\n```\n\n' "$tiradas"
-
-  printf '## Palabras resultantes\n\n'
-  printf '| Implementacion | Palabras (1 -> 12) |\n'
-  printf '|---|---|\n'
-  printf '| Python | %s |\n' "$pal_py"
-  printf '| JavaScript | %s |\n\n' "$pal_js"
-
-  if [[ "$coincide" == "si" ]]; then
-    printf '## Entropia en distintos formatos\n\n'
-    printf 'Para verificar a mano con herramientas externas (por ejemplo, un conversor de\n'
-    printf 'bases, o https://iancoleman.io/bip39/ pegando la entropia en hexadecimal).\n\n'
-    printf '| Formato | Valor |\n'
-    printf '|---|---|\n'
-    formatos_md "$hex_py"
-    printf '\n'
-  else
-    printf '## Entropia por implementacion (no coinciden)\n\n'
-    printf '### Python\n\n| Formato | Valor |\n|---|---|\n'
-    formatos_md "$hex_py"
-    printf '\n### JavaScript\n\n| Formato | Valor |\n|---|---|\n'
-    formatos_md "$hex_js"
-    printf '\n'
-  fi
-
-  printf -- '---\n'
-  printf 'Generado automaticamente por `comparar_implementaciones.sh`.\n'
-}
-
-echo "== Paso 2: comparacion cruzada con las mismas tiradas =="
-fallos=0
-for ((i = 1; i <= N_RONDAS; i++)); do
-  # 50 tiradas de un d6 (1-6), leidas de /dev/urandom: nada que instalar.
-  tiradas="$(od -An -tu1 -N50 /dev/urandom \
-             | tr -s ' \n' '\n' | grep -v '^$' \
-             | awk '{print ($1 % 6) + 1}' | tr '\n' ' ')"
-
-  salida_py="$(printf '%s\n' "$tiradas" | python3 "$PY")"
-  salida_js="$(printf '%s\n' "$tiradas" | node "$JS")"
-
-  r_py="$(extraer "$salida_py")"
-  r_js="$(extraer "$salida_js")"
-
-  hex_py="${r_py%%|*}"; pal_py="${r_py#*|}"
-  hex_js="${r_js%%|*}"; pal_js="${r_js#*|}"
-
-  if [[ "$r_py" == "$r_js" ]]; then
-    coincide="si"
-    informe="$INFORMES/${hex_py}.md"
-  else
-    coincide="no"
-    fallos=$((fallos + 1))
-    informe="$INFORMES/${hex_py}_DESAJUSTE.md"
-  fi
-
-  generar_informe "$i" "$tiradas" "$coincide" \
-    "$hex_py" "$pal_py" "$hex_js" "$pal_js" > "$informe"
-
-  if [[ "$coincide" == "si" ]]; then
-    echo "ronda $i: OK  (entropia $hex_py) -> ${informe#"$ROOT"/}"
-  else
-    echo "ronda $i: FALLO -> ${informe#"$ROOT"/}"
-    echo "  tiradas : $tiradas"
-    echo "  python  : $r_py"
-    echo "  node    : $r_js"
-  fi
-done
-
-echo
-if [[ $fallos -eq 0 ]]; then
-  echo "OK: $N_RONDAS rondas, las 2 implementaciones coincidieron siempre."
-  echo "Informes en: $INFORMES"
-  exit 0
-else
-  echo "FALLO: $fallos de $N_RONDAS rondas no coincidieron."
-  echo "Informes en: $INFORMES"
-  exit 1
-fi
-</script>
 
 <script>
 /* ---------- idioma ---------- */
@@ -2401,8 +2171,7 @@ const es = function(){ return document.documentElement.getAttribute('data-lang')
 
 const HASHES = {
   'bip39_dados.py':'66d9f0b42288760e7f228e59ffa4e51f1fc9fa509b36f5f1900aedb1fab02d20',
-  'bip39_dados.js':'19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9',
-  'comparar_implementaciones.sh':'119902d835e43a835873c0c7f79fd816f371613f7be18f7910689b45ea884442'
+  'bip39_dados.js':'19e9e544ecee03b3e216ff8244bb726cdf5b0a34209a6565ee0f9dc3663551a9'
 };
 
 /* ---------- resaltado de sintaxis ----------
