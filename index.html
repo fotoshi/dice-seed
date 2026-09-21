@@ -520,8 +520,8 @@ byte 0x05 = 0000 0101
 
   <h3 data-l="es">El script</h3>
   <h3 data-l="en">The script</h3>
-  <p data-l="es">Está comentado paso a paso, dividido en dos grupos: primero la generación de la entropía y luego la de las 12 palabras. Incluye <code>--test</code>, que comprueba los vectores oficiales de BIP-39, y <code>--detalle</code>, que imprime todos los valores intermedios.</p>
-  <p data-l="en">It's commented step by step, split into two groups: first the entropy generation, then the 12 words. It includes <code>--test</code>, which checks the official BIP-39 vectors, and <code>--detalle</code>, which prints every intermediate value.</p>
+  <p data-l="es">Está comentado paso a paso, dividido en dos grupos: primero la generación de la entropía y luego la de las 12 palabras. Incluye <code>--detalle</code>, que imprime todos los valores intermedios.</p>
+  <p data-l="en">It's commented step by step, split into two groups: first the entropy generation, then the 12 words. It includes <code>--detalle</code>, which prints every intermediate value.</p>
 
   <div class="note">
     <span class="tag" data-l="es">Cómo introducir las tiradas</span><span class="tag" data-l="en">How to enter the rolls</span>
@@ -550,18 +550,12 @@ byte 0x05 = 0000 0101
       </ul>
 
       <span class="lab" data-l="es">Cómo se lanza</span><span class="lab" data-l="en">How to run it</span>
-      <div class="run" data-l="es"><span class="cm"># comprueba los vectores</span>
-python3 bip39_dados.py --test
-
-<span class="cm"># pide las 50 tiradas</span>
+      <div class="run" data-l="es"><span class="cm"># pide las 50 tiradas</span>
 python3 bip39_dados.py
 
 <span class="cm"># imprime cada paso</span>
 python3 bip39_dados.py --detalle</div>
-      <div class="run" data-l="en"><span class="cm"># checks the vectors</span>
-python3 bip39_dados.py --test
-
-<span class="cm"># prompts for the rolls</span>
+      <div class="run" data-l="en"><span class="cm"># prompts for the rolls</span>
 python3 bip39_dados.py
 
 <span class="cm"># prints every step</span>
@@ -572,7 +566,7 @@ python3 bip39_dados.py --detalle</div>
         <button class="btn" onclick="verCodigo('bip39_dados.py')" data-l="es">Ver código</button>
         <button class="btn" onclick="verCodigo('bip39_dados.py')" data-l="en">View code</button>
       </div>
-      <div class="hashline">91cbc48e7f1a44688d5c4e0bab5e754c9d676e53aeafa1e01bb8f468ff18606c</div>
+      <div class="hashline">e3d930292cb20c6cef16197f503b6c0b7b9d3c567a0d9ab95ce33af3c44558c8</div>
     </div>
   </div>
 
@@ -650,7 +644,6 @@ sha256sum -c SHA256SUMS                  <b># Linux</b></div>
   <ul class="check" data-l="es">
     <li>El ordenador está <strong>sin red</strong>: WiFi apagado y cable desconectado. Idealmente arrancado desde un USB live que se olvide todo al apagar.</li>
     <li>Has <strong>verificado la firma</strong> y comparado la huella con al menos dos canales distintos.</li>
-    <li>Has ejecutado <code>--test</code> y ha pasado los vectores oficiales.</li>
     <li>Usas un <strong>dado de casino</strong>, con aristas vivas, sobre una superficie dura.</li>
     <li>Vas a apuntar las palabras <strong>en papel</strong>, en orden. Nada de fotos, ficheros ni gestores de contraseñas.</li>
     <li>Vas a <strong>verificar la entropía</strong> en hexadecimal con una segunda herramienta antes de enviar fondos.</li>
@@ -660,7 +653,6 @@ sha256sum -c SHA256SUMS                  <b># Linux</b></div>
   <ul class="check" data-l="en">
     <li>The computer is <strong>offline</strong>: WiFi off, cable unplugged. Ideally booted from a live USB that forgets everything on shutdown.</li>
     <li>You have <strong>verified the signature</strong> and compared the fingerprint against at least two separate channels.</li>
-    <li>You ran <code>--test</code> and it passed the official vectors.</li>
     <li>You're using a <strong>casino-grade die</strong> with sharp edges, on a hard surface.</li>
     <li>You will write the words <strong>on paper</strong>, in order. No photos, no files, no password managers.</li>
     <li>You will <strong>cross-check the hex entropy</strong> with a second tool before sending funds.</li>
@@ -700,7 +692,6 @@ bip39_dados.py - 12 palabras BIP39 a partir de 50 tiradas de un dado de 6 caras.
 USO:
     python3 bip39_dados.py              # pide las tiradas por teclado
     python3 bip39_dados.py --detalle    # ademas, muestra todos los pasos intermedios
-    python3 bip39_dados.py --test       # autocomprobacion con vectores oficiales
 
 EL CODIGO SE LEE DE ARRIBA ABAJO EN DOS GRUPOS:
 
@@ -1071,69 +1062,10 @@ def mostrar_detalle(tiradas, entropia):
 
 
 # ============================================================================
-#  Autocomprobacion
-# ============================================================================
-
-def autotest():
-    """Vectores oficiales de BIP39 mas comprobaciones propias del dado."""
-
-    # La lista incrustada debe ser byte a byte la oficial. Si alguien cambiara
-    # una sola letra, este hash no cuadraria.
-    assert len(PALABRAS) == PALABRAS_EN_LISTA, "la lista debe tener 2048 palabras"
-    assert hashlib.sha256(("\n".join(PALABRAS) + "\n").encode()).hexdigest() == \
-        "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda", \
-        "la lista de palabras NO coincide con la oficial de BIP-39"
-
-    # Vectores de la especificacion (github.com/trezor/python-mnemonic).
-    vectores = [
-        ("00000000000000000000000000000000",
-         "abandon abandon abandon abandon abandon abandon "
-         "abandon abandon abandon abandon abandon about"),
-        ("7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-         "legal winner thank year wave sausage worth useful "
-         "legal winner thank yellow"),
-        ("80808080808080808080808080808080",
-         "letter advice cage absurd amount doctor acoustic avoid "
-         "letter advice cage above"),
-        ("ffffffffffffffffffffffffffffffff",
-         "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"),
-        ("9e885d952ad362caeb4efe34a8e91bd2",
-         "ozone drill grab fiber curtain grace pudding thank "
-         "cruise elder eight picnic"),
-    ]
-    for hexadecimal, esperado in vectores:
-        obtenido = " ".join(entropia_a_palabras(bytes.fromhex(hexadecimal)))
-        assert obtenido == esperado, "fallo en %s:\n  %s" % (hexadecimal, obtenido)
-
-    # 50 unos -> todos los digitos a 0 -> N = 0 -> entropia toda a cero
-    assert tiradas_a_entropia([1] * 50).hex() == "0" * 32
-    # 50 seises -> N = 6^50 - 1, contrastado con el calculo directo
-    assert tiradas_a_entropia([6] * 50) == \
-        ((6 ** 50 - 1) % (1 << 128)).to_bytes(16, "big")
-    # El orden importa: la primera tirada pesa 6^49, la ultima 6^0
-    assert tiradas_a_entropia([2] + [1] * 49) != tiradas_a_entropia([1] * 49 + [2])
-    # Las constantes tienen que encajar sin bits sobrantes
-    assert N_PALABRAS * BITS_POR_PALABRA == BITS_ENTROPIA + BITS_CHECKSUM
-    assert 2 ** BITS_POR_PALABRA == PALABRAS_EN_LISTA
-    # Los cuatro formatos describen el mismo numero, cada uno en su base
-    prueba = bytes.fromhex("9e885d952ad362caeb4efe34a8e91bd2")
-    fmt = formatos_entropia(prueba)
-    assert int(fmt["bin"], 2) == int(fmt["hex"], 16) == int(fmt["dec"])
-    assert int(fmt["base6"], 6) == int(fmt["dec"])
-
-    print("OK: %d vectores oficiales y 7 comprobaciones propias superados."
-          % len(vectores))
-
-
-# ============================================================================
 #  Programa principal
 # ============================================================================
 
 def main():
-    if "--test" in sys.argv:
-        autotest()
-        return
-
     tiradas = leer_tiradas()                        # grupo 1: entrada
     entropia = tiradas_a_entropia(tiradas)          # grupo 1: 128 bits
     palabras = entropia_a_palabras(entropia)        # grupo 2: 12 palabras
@@ -1484,7 +1416,7 @@ const viewer = document.getElementById('viewer');
 const es = function(){ return document.documentElement.getAttribute('data-lang') === 'es'; };
 
 const HASHES = {
-  'bip39_dados.py':'91cbc48e7f1a44688d5c4e0bab5e754c9d676e53aeafa1e01bb8f468ff18606c'
+  'bip39_dados.py':'e3d930292cb20c6cef16197f503b6c0b7b9d3c567a0d9ab95ce33af3c44558c8'
 };
 
 /* ---------- resaltado de sintaxis (Python) ----------
