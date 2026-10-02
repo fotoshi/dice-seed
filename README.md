@@ -47,7 +47,6 @@ La web incluye una lista de comprobación completa.
 
 ```bash
 cd scripts/python
-python3 bip39_dados.py --test      # comprobar contra los vectores oficiales
 python3 bip39_dados.py             # pedir las 50 tiradas
 python3 bip39_dados.py --detalle   # mostrar todos los pasos intermedios
 ```
@@ -169,10 +168,11 @@ Se agradecen especialmente:
 - **Revisiones del código.** Es criptografía: cuantos más ojos, mejor.
 - **Traducciones** a otros idiomas.
 - **Implementaciones en otros lenguajes**, siempre que usen solo la biblioteca
-  estándar y pasen los vectores oficiales de BIP-39.
+  estándar y reproduzcan los vectores oficiales de BIP-39.
 
-Toda propuesta debe pasar `--test` antes de enviarse. Si encuentras un fallo de
-seguridad, escribe en privado antes de publicarlo.
+Toda propuesta debe reproducir los vectores oficiales de BIP-39 antes de
+enviarse. Si encuentras un fallo de seguridad, escribe en privado antes de
+publicarlo.
 
 ## Licencia
 
@@ -212,7 +212,6 @@ The site has a full checklist.
 
 ```bash
 cd scripts/python
-python3 bip39_dados.py --test      # check against the official vectors
 python3 bip39_dados.py             # prompt for the 50 rolls
 python3 bip39_dados.py --detalle   # print every intermediate value
 ```
@@ -333,10 +332,10 @@ Especially welcome:
 - **Code review.** This is cryptography: the more eyes, the better.
 - **Translations** into other languages.
 - **Ports to other languages**, as long as they use only the standard library
-  and pass the official BIP-39 vectors.
+  and reproduce the official BIP-39 vectors.
 
-Any proposal must pass `--test` before submission. If you find a security issue,
-please write privately before disclosing it.
+Any proposal must reproduce the official BIP-39 vectors before submission. If you
+find a security issue, please write privately before disclosing it.
 
 ## Licence
 

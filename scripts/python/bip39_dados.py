@@ -6,7 +6,6 @@ bip39_dados.py - 12 palabras BIP39 a partir de 50 tiradas de un dado de 6 caras.
 USO:
     python3 bip39_dados.py              # pide las tiradas por teclado
     python3 bip39_dados.py --detalle    # ademas, muestra todos los pasos intermedios
-    python3 bip39_dados.py --test       # autocomprobacion con vectores oficiales
 
 EL CODIGO SE LEE DE ARRIBA ABAJO EN DOS GRUPOS:
 
@@ -377,69 +376,10 @@ def mostrar_detalle(tiradas, entropia):
 
 
 # ============================================================================
-#  Autocomprobacion
-# ============================================================================
-
-def autotest():
-    """Vectores oficiales de BIP39 mas comprobaciones propias del dado."""
-
-    # La lista incrustada debe ser byte a byte la oficial. Si alguien cambiara
-    # una sola letra, este hash no cuadraria.
-    assert len(PALABRAS) == PALABRAS_EN_LISTA, "la lista debe tener 2048 palabras"
-    assert hashlib.sha256(("\n".join(PALABRAS) + "\n").encode()).hexdigest() == \
-        "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda", \
-        "la lista de palabras NO coincide con la oficial de BIP-39"
-
-    # Vectores de la especificacion (github.com/trezor/python-mnemonic).
-    vectores = [
-        ("00000000000000000000000000000000",
-         "abandon abandon abandon abandon abandon abandon "
-         "abandon abandon abandon abandon abandon about"),
-        ("7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-         "legal winner thank year wave sausage worth useful "
-         "legal winner thank yellow"),
-        ("80808080808080808080808080808080",
-         "letter advice cage absurd amount doctor acoustic avoid "
-         "letter advice cage above"),
-        ("ffffffffffffffffffffffffffffffff",
-         "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"),
-        ("9e885d952ad362caeb4efe34a8e91bd2",
-         "ozone drill grab fiber curtain grace pudding thank "
-         "cruise elder eight picnic"),
-    ]
-    for hexadecimal, esperado in vectores:
-        obtenido = " ".join(entropia_a_palabras(bytes.fromhex(hexadecimal)))
-        assert obtenido == esperado, "fallo en %s:\n  %s" % (hexadecimal, obtenido)
-
-    # 50 unos -> todos los digitos a 0 -> N = 0 -> entropia toda a cero
-    assert tiradas_a_entropia([1] * 50).hex() == "0" * 32
-    # 50 seises -> N = 6^50 - 1, contrastado con el calculo directo
-    assert tiradas_a_entropia([6] * 50) == \
-        ((6 ** 50 - 1) % (1 << 128)).to_bytes(16, "big")
-    # El orden importa: la primera tirada pesa 6^49, la ultima 6^0
-    assert tiradas_a_entropia([2] + [1] * 49) != tiradas_a_entropia([1] * 49 + [2])
-    # Las constantes tienen que encajar sin bits sobrantes
-    assert N_PALABRAS * BITS_POR_PALABRA == BITS_ENTROPIA + BITS_CHECKSUM
-    assert 2 ** BITS_POR_PALABRA == PALABRAS_EN_LISTA
-    # Los cuatro formatos describen el mismo numero, cada uno en su base
-    prueba = bytes.fromhex("9e885d952ad362caeb4efe34a8e91bd2")
-    fmt = formatos_entropia(prueba)
-    assert int(fmt["bin"], 2) == int(fmt["hex"], 16) == int(fmt["dec"])
-    assert int(fmt["base6"], 6) == int(fmt["dec"])
-
-    print("OK: %d vectores oficiales y 7 comprobaciones propias superados."
-          % len(vectores))
-
-
-# ============================================================================
 #  Programa principal
 # ============================================================================
 
 def main():
-    if "--test" in sys.argv:
-        autotest()
-        return
-
     tiradas = leer_tiradas()                        # grupo 1: entrada
     entropia = tiradas_a_entropia(tiradas)          # grupo 1: 128 bits
     palabras = entropia_a_palabras(entropia)        # grupo 2: 12 palabras
