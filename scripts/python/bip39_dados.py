@@ -8,28 +8,19 @@ USO:
     python3 bip39_dados.py --detalle    # ademas, muestra todos los pasos intermedios
     python3 bip39_dados.py --test       # autocomprobacion con vectores oficiales
 
-EL METODO EN CINCO PASOS:
+EL CODIGO SE LEE DE ARRIBA ABAJO EN DOS GRUPOS:
 
-    50 tiradas de d6
-          |  PASO 1: leer las tiradas como un numero en base 6
-          v
-    numero entero N  (unos 129,25 bits)
-          |  PASO 2: quedarse con los 128 bits bajos
-          v
-    entropia = 16 bytes = 128 bits
-          |  PASO 3: checksum = 4 primeros bits de SHA-256(entropia)
-          v
-    132 bits = 128 + 4
-          |  PASO 4: escribir esos 132 bits como un numero en base 2048
-          v
-    12 indices (0-2047)
-          |  PASO 5: buscar cada indice en la lista oficial
-          v
-    12 palabras
+    GRUPO 1 - Generacion de entropia
+        Todo lo que va de las 50 tiradas hasta tener 128 bits de entropia,
+        y pintarlos en cuatro formatos: binario, hexadecimal, decimal y base 6.
 
-    Los pasos 1 y 4 son la MISMA operacion en sentidos opuestos: una conversion
-    de base. Primero LEEMOS los dados en base 6, luego ESCRIBIMOS el resultado
-    en base 2048. Esa simetria es el corazon del metodo.
+    GRUPO 2 - Generacion de las 12 palabras
+        La logica de BIP-39 que convierte esos 128 bits en 12 palabras:
+        checksum, corte en grupos de 11 bits y busqueda en la lista oficial.
+
+    La idea central: leer los dados es pasar un numero A BASE 6, y sacar las
+    palabras es pasar ese mismo numero A BASE 2048. Es la misma operacion en
+    los dos sentidos. Por eso base 6 aparece en los dos grupos.
 
 SEGURIDAD:
     - Ejecutalo en un ordenador SIN RED, idealmente arrancado desde un USB live.
@@ -46,8 +37,17 @@ import hashlib
 import sys
 
 
+# ############################################################################
+# #
+# #  GRUPO 1 - GENERACION DE ENTROPIA
+# #
+# #  De las 50 tiradas a 128 bits, listos para pintarse en cuatro formatos.
+# #
+# ############################################################################
+
+
 # ============================================================================
-#  CONSTANTES - de donde sale cada numero
+#  Constantes del grupo - de donde sale cada numero
 # ============================================================================
 
 # Un dado de 6 caras aporta log2(6) = 2,585 bits por tirada.
@@ -59,22 +59,48 @@ N_TIRADAS = 50
 # 128 bits es el estandar para 12 palabras.
 BITS_ENTROPIA = 128
 
-# La especificacion fija: bits de checksum = bits de entropia / 32.
-# 128 / 32 = 4 bits. No aportan seguridad, sirven para detectar erratas.
-BITS_CHECKSUM = BITS_ENTROPIA // 32
-
-# La lista oficial tiene 2048 palabras, y 2048 = 2^11.
-# Por eso cada palabra codifica exactamente 11 bits.
-PALABRAS_EN_LISTA = 2048
-BITS_POR_PALABRA = 11
-
-# 128 + 4 = 132 bits, y 132 / 11 = 12 palabras exactas. No sobra ni falta
-# un bit: todo el diseño de BIP39 esta hecho para que esta division sea limpia.
-N_PALABRAS = (BITS_ENTROPIA + BITS_CHECKSUM) // BITS_POR_PALABRA
+# El dado tiene 6 caras: leerlo es trabajar en base 6.
+BASE_DADO = 6
 
 
 # ============================================================================
-#  PASOS 1 y 2 - de las tiradas a la entropia
+#  Leer las tiradas del usuario
+# ============================================================================
+
+def leer_tiradas():
+    """Lee 50 tiradas por teclado (o por stdin, si se canaliza)."""
+    print("Introduce %d tiradas de un dado de 6 caras." % N_TIRADAS)
+    print("Puedes escribirlas de una en una o varias juntas (ej: 3 1 6 4 2).")
+    print("Ctrl-C para abortar.\n")
+
+    tiradas = []
+    while len(tiradas) < N_TIRADAS:
+        try:
+            # Pide una linea recordando que hacer y mostrando el progreso:
+            # "Escribe tus tiradas (1-6) [ 7/50] > ". El %2d alinea el numero a
+            # 2 huecos para que el prompt no baile al pasar de 9 a 10.
+            linea = input("Escribe tus tiradas (1-6) [%2d/%d] > "
+                          % (len(tiradas), N_TIRADAS))
+        except EOFError:
+            break                       # se acabo la entrada canalizada
+        for caracter in linea:
+            if caracter in "123456":
+                tiradas.append(int(caracter))
+                if len(tiradas) == N_TIRADAS:
+                    break
+            elif not caracter.isspace() and caracter not in ",;-.":
+                # Avisamos en vez de callar: un '7' o una 'o' suele ser un error
+                # de tecleo que cambiaria la semilla sin que te enteres.
+                print("  aviso: ignorado el caracter %r" % caracter)
+
+    if len(tiradas) != N_TIRADAS:
+        sys.exit("\nERROR: solo se leyeron %d tiradas de %d. Abortado."
+                 % (len(tiradas), N_TIRADAS))
+    return tiradas
+
+
+# ============================================================================
+#  De las tiradas a la entropia (los dos primeros pasos del metodo)
 # ============================================================================
 
 def tiradas_a_entropia(tiradas):
@@ -84,7 +110,7 @@ def tiradas_a_entropia(tiradas):
         raise ValueError("hacen falta exactamente %d tiradas, recibidas %d"
                          % (N_TIRADAS, len(tiradas)))
 
-    # ---- PASO 1: las tiradas son los digitos de un numero en base 6 --------
+    # ---- Las tiradas son los digitos de un numero en base 6 ----------------
     #
     # El dado no tiene cara 0, asi que restamos 1 para pasar de 1..6 a 0..5.
     # El numero que formamos es:
@@ -104,9 +130,9 @@ def tiradas_a_entropia(tiradas):
     for tirada in tiradas:
         if not 1 <= tirada <= 6:
             raise ValueError("tirada fuera del rango 1-6: %r" % tirada)
-        n = n * 6 + (tirada - 1)
+        n = n * BASE_DADO + (tirada - 1)
 
-    # ---- PASO 2: recortar a exactamente 128 bits ---------------------------
+    # ---- Recortar a exactamente 128 bits -----------------------------------
     #
     # N puede llegar hasta 6^50 - 1, que es 2,375 veces mayor que 2^128.
     # Nos quedamos con los 128 bits bajos.
@@ -131,7 +157,66 @@ def tiradas_a_entropia(tiradas):
 
 
 # ============================================================================
-#  PASO 3 - el checksum
+#  Pintar la entropia en cuatro formatos
+# ============================================================================
+
+def entero_a_base(numero, base):
+    """Escribe un entero >= 0 como cadena de digitos en la base dada (2..10)."""
+    # Divisiones sucesivas: el resto de cada una es un digito, del menos al mas
+    # significativo, asi que los vamos poniendo por delante. El 0 es un caso
+    # aparte porque el bucle no llega a entrar.
+    if numero == 0:
+        return "0"
+    digitos = []
+    while numero:
+        numero, resto = divmod(numero, base)
+        digitos.insert(0, str(resto))
+    return "".join(digitos)
+
+
+def formatos_entropia(entropia):
+    """Devuelve la misma entropia en binario, hex, decimal y base 6."""
+    # Los cuatro son el MISMO numero de 128 bits escrito en bases distintas.
+    # El binario se rellena a 128 cifras para que se vean los ceros de cabecera.
+    numero = int.from_bytes(entropia, "big")
+    return {
+        "bin":  bin(numero)[2:].zfill(BITS_ENTROPIA),
+        "hex":  entropia.hex(),
+        "dec":  str(numero),
+        "base6": entero_a_base(numero, BASE_DADO),
+    }
+
+
+# ############################################################################
+# #
+# #  GRUPO 2 - GENERACION DE LAS 12 PALABRAS
+# #
+# #  De los 128 bits de entropia a las 12 palabras, aplicando BIP-39:
+# #  checksum, corte en grupos de 11 bits y busqueda en la lista oficial.
+# #
+# ############################################################################
+
+
+# ============================================================================
+#  Constantes del grupo - las cuentas de BIP-39
+# ============================================================================
+
+# La especificacion fija: bits de checksum = bits de entropia / 32.
+# 128 / 32 = 4 bits. No aportan seguridad, sirven para detectar erratas.
+BITS_CHECKSUM = BITS_ENTROPIA // 32
+
+# La lista oficial tiene 2048 palabras, y 2048 = 2^11.
+# Por eso cada palabra codifica exactamente 11 bits.
+PALABRAS_EN_LISTA = 2048
+BITS_POR_PALABRA = 11
+
+# 128 + 4 = 132 bits, y 132 / 11 = 12 palabras exactas. No sobra ni falta
+# un bit: todo el diseño de BIP39 esta hecho para que esta division sea limpia.
+N_PALABRAS = (BITS_ENTROPIA + BITS_CHECKSUM) // BITS_POR_PALABRA
+
+
+# ============================================================================
+#  El checksum
 # ============================================================================
 
 def calcular_checksum(entropia):
@@ -153,7 +238,7 @@ def calcular_checksum(entropia):
 
 
 # ============================================================================
-#  PASOS 4 y 5 - de la entropia a las palabras
+#  De la entropia a las 12 palabras
 # ============================================================================
 
 def entropia_a_indices(entropia):
@@ -173,11 +258,11 @@ def entropia_a_indices(entropia):
     v = int.from_bytes(entropia, "big") << BITS_CHECKSUM
     v |= calcular_checksum(entropia)
 
-    # ---- PASO 4: escribir esos 132 bits como un numero en base 2048 --------
+    # ---- Escribir esos 132 bits como un numero en base 2048 ----------------
     #
-    # Esto es EXACTAMENTE la operacion inversa del paso 1. Alli leiamos digitos
-    # en base 6 y construiamos un numero; aqui cogemos un numero y extraemos
-    # sus digitos en base 2048. Cada "digito" es un indice de palabra.
+    # Esto es EXACTAMENTE la operacion inversa de leer los dados en base 6.
+    # Alli construiamos un numero a partir de digitos; aqui cogemos un numero
+    # y extraemos sus digitos en base 2048. Cada "digito" es un indice de palabra.
     #
     # divmod(v, 2048) devuelve (cociente, resto) de una sola vez. El resto son
     # los 11 bits mas bajos, es decir, el digito de menor peso. Como salen del
@@ -200,51 +285,33 @@ def entropia_a_indices(entropia):
 
 def entropia_a_palabras(entropia):
     """Convierte 16 bytes de entropia en las 12 palabras BIP39."""
-    # ---- PASO 5: cada indice es una posicion directa en la lista -----------
+    # Cada indice es una posicion directa en la lista oficial.
     return [PALABRAS[i] for i in entropia_a_indices(entropia)]
 
 
-# ============================================================================
-#  ENTRADA - leer las tiradas del usuario
-# ============================================================================
-
-def leer_tiradas():
-    """Lee 50 tiradas por teclado (o por stdin, si se canaliza)."""
-    print("Introduce %d tiradas de un dado de 6 caras." % N_TIRADAS)
-    print("Puedes escribirlas de una en una o varias juntas (ej: 3 1 6 4 2).")
-    print("Ctrl-C para abortar.\n")
-
-    tiradas = []
-    while len(tiradas) < N_TIRADAS:
-        try:
-            linea = input("[%2d/%d] > " % (len(tiradas), N_TIRADAS))
-        except EOFError:
-            break                       # se acabo la entrada canalizada
-        for caracter in linea:
-            if caracter in "123456":
-                tiradas.append(int(caracter))
-                if len(tiradas) == N_TIRADAS:
-                    break
-            elif not caracter.isspace() and caracter not in ",;-.":
-                # Avisamos en vez de callar: un '7' o una 'o' suele ser un error
-                # de tecleo que cambiaria la semilla sin que te enteres.
-                print("  aviso: ignorado el caracter %r" % caracter)
-
-    if len(tiradas) != N_TIRADAS:
-        sys.exit("\nERROR: solo se leyeron %d tiradas de %d. Abortado."
-                 % (len(tiradas), N_TIRADAS))
-    return tiradas
+# ############################################################################
+# #
+# #  SALIDA, AUTOCOMPROBACION Y PROGRAMA PRINCIPAL
+# #
+# ############################################################################
 
 
 # ============================================================================
-#  SALIDA
+#  Salida
 # ============================================================================
 
 def mostrar_resultado(tiradas, entropia, palabras):
-    """Imprime lo imprescindible: tiradas, entropia y las 12 palabras."""
+    """Imprime lo imprescindible: tiradas, entropia (4 formatos) y palabras."""
+    formatos = formatos_entropia(entropia)
     print("\n" + "=" * 52)
-    print("Tiradas  : %s" % "".join(str(t) for t in tiradas))
-    print("Entropia : %s" % entropia.hex())
+    print("Tiradas      : %s" % "".join(str(t) for t in tiradas))
+    print("-" * 52)
+    # La misma entropia en cuatro bases. La de base 6 aqui es el NUMERO de 128
+    # bits, no la secuencia de tiradas: son cosas distintas (128 vs 129,25 bits).
+    print("Entropia hex : %s" % formatos["hex"])
+    print("Entropia bin : %s" % formatos["bin"])
+    print("Entropia dec : %s" % formatos["dec"])
+    print("Entropia b6  : %s" % formatos["base6"])
     print("=" * 52)
     for numero, palabra in enumerate(palabras, 1):
         print("%2d. %s" % (numero, palabra))
@@ -255,38 +322,40 @@ def mostrar_resultado(tiradas, entropia, palabras):
 
 def mostrar_detalle(tiradas, entropia):
     """Imprime todos los valores intermedios. Solo para aprender y enseñar."""
-    # Rehacemos el paso 1 aqui para poder enseñar N, que la funcion principal
-    # no devuelve. Mantener las funciones "limpias" y explicar aparte es mejor
-    # que llenarlas de prints.
+    # Rehacemos el primer paso aqui para poder enseñar N, que la funcion
+    # principal no devuelve. Mantener las funciones "limpias" y explicar aparte
+    # es mejor que llenarlas de prints.
     n = 0
     for tirada in tiradas:
-        n = n * 6 + (tirada - 1)
+        n = n * BASE_DADO + (tirada - 1)
 
+    formatos = formatos_entropia(entropia)
     checksum = calcular_checksum(entropia)
     indices = entropia_a_indices(entropia)
-    bits_entropia = bin(int.from_bytes(entropia, "big"))[2:].zfill(BITS_ENTROPIA)
-    bits_totales = bits_entropia + bin(checksum)[2:].zfill(BITS_CHECKSUM)
+    bits_totales = formatos["bin"] + bin(checksum)[2:].zfill(BITS_CHECKSUM)
 
     print("\n" + "-" * 52)
-    print("PASO 1 - las tiradas como numero en base 6")
+    print("GRUPO 1 - las tiradas como numero en base 6")
     print("-" * 52)
     print("  digitos (tirada - 1): %s" % "".join(str(t - 1) for t in tiradas))
     print("  N  = %d" % n)
     print("  N ocupa %d bits" % n.bit_length())
 
     print("\n" + "-" * 52)
-    print("PASO 2 - recorte a %d bits" % BITS_ENTROPIA)
+    print("GRUPO 1 - recorte a %d bits" % BITS_ENTROPIA)
     print("-" * 52)
     print("  2^%d = %d" % (BITS_ENTROPIA, 1 << BITS_ENTROPIA))
     if n < (1 << BITS_ENTROPIA):
         print("  N ya era menor que 2^%d: el modulo no cambia nada" % BITS_ENTROPIA)
     else:
         print("  N era mayor: se le resta 2^%d" % BITS_ENTROPIA)
-    print("  entropia (hex) = %s" % entropia.hex())
-    print("  entropia (bin) = %s" % bits_entropia)
+    print("  entropia (hex)   = %s" % formatos["hex"])
+    print("  entropia (bin)   = %s" % formatos["bin"])
+    print("  entropia (dec)   = %s" % formatos["dec"])
+    print("  entropia (base6) = %s" % formatos["base6"])
 
     print("\n" + "-" * 52)
-    print("PASO 3 - checksum")
+    print("GRUPO 2 - checksum")
     print("-" * 52)
     print("  SHA-256(entropia) = %s..." % hashlib.sha256(entropia).hexdigest()[:16])
     primer_byte = hashlib.sha256(entropia).digest()[0]
@@ -295,10 +364,10 @@ def mostrar_detalle(tiradas, entropia):
           % (8 - BITS_CHECKSUM, bin(checksum)[2:].zfill(BITS_CHECKSUM)))
 
     print("\n" + "-" * 52)
-    print("PASOS 4 y 5 - %d bits en grupos de %d"
+    print("GRUPO 2 - %d bits en grupos de %d"
           % (BITS_ENTROPIA + BITS_CHECKSUM, BITS_POR_PALABRA))
     print("-" * 52)
-    print("  %s|%s" % (bits_entropia, bin(checksum)[2:].zfill(BITS_CHECKSUM)))
+    print("  %s|%s" % (formatos["bin"], bin(checksum)[2:].zfill(BITS_CHECKSUM)))
     for posicion, indice in enumerate(indices):
         inicio = posicion * BITS_POR_PALABRA
         grupo = bits_totales[inicio:inicio + BITS_POR_PALABRA]
@@ -308,7 +377,7 @@ def mostrar_detalle(tiradas, entropia):
 
 
 # ============================================================================
-#  AUTOCOMPROBACION
+#  Autocomprobacion
 # ============================================================================
 
 def autotest():
@@ -352,13 +421,18 @@ def autotest():
     # Las constantes tienen que encajar sin bits sobrantes
     assert N_PALABRAS * BITS_POR_PALABRA == BITS_ENTROPIA + BITS_CHECKSUM
     assert 2 ** BITS_POR_PALABRA == PALABRAS_EN_LISTA
+    # Los cuatro formatos describen el mismo numero, cada uno en su base
+    prueba = bytes.fromhex("9e885d952ad362caeb4efe34a8e91bd2")
+    fmt = formatos_entropia(prueba)
+    assert int(fmt["bin"], 2) == int(fmt["hex"], 16) == int(fmt["dec"])
+    assert int(fmt["base6"], 6) == int(fmt["dec"])
 
-    print("OK: %d vectores oficiales y 5 comprobaciones propias superados."
+    print("OK: %d vectores oficiales y 7 comprobaciones propias superados."
           % len(vectores))
 
 
 # ============================================================================
-#  PROGRAMA PRINCIPAL
+#  Programa principal
 # ============================================================================
 
 def main():
@@ -366,20 +440,20 @@ def main():
         autotest()
         return
 
-    tiradas = leer_tiradas()
-    entropia = tiradas_a_entropia(tiradas)          # pasos 1 y 2
-    palabras = entropia_a_palabras(entropia)        # pasos 3, 4 y 5
+    tiradas = leer_tiradas()                        # grupo 1: entrada
+    entropia = tiradas_a_entropia(tiradas)          # grupo 1: 128 bits
+    palabras = entropia_a_palabras(entropia)        # grupo 2: 12 palabras
 
     if "--detalle" in sys.argv:
         mostrar_detalle(tiradas, entropia)
     mostrar_resultado(tiradas, entropia, palabras)
 
 
-
 # ============================================================================
 #  LA LISTA OFICIAL - 2048 palabras del BIP-39 en ingles
 # ============================================================================
 #
+#  Pertenece al GRUPO 2: es la tabla donde cada indice se convierte en palabra.
 #  Dos propiedades la hacen especial:
 #    - Son 2048 = 2^11 exactas, para que cada palabra valga 11 bits limpios.
 #    - Las 4 PRIMERAS LETRAS son unicas (aban/abil/able...). Puedes apuntar

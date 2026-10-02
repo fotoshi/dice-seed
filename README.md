@@ -1,12 +1,11 @@
 # dice-seed
 
 **Una semilla BIP-39 de 12 palabras a partir de 50 tiradas de un dado de 6 caras.**
-Dos implementaciones equivalentes, sin dependencias, comentadas paso a paso para
-poder auditarlas y enseñarlas.
+Un script en Python, sin dependencias, comentado paso a paso para poder auditarlo
+y enseñarlo.
 
-**A 12-word BIP-39 seed from 50 rolls of a six-sided die.** Two equivalent
-implementations, no dependencies, commented step by step so they can be audited
-and taught.
+**A 12-word BIP-39 seed from 50 rolls of a six-sided die.** A single Python
+script, no dependencies, commented step by step so it can be audited and taught.
 
 🌐 **[fotoshi.github.io/dice-seed](https://fotoshi.github.io/dice-seed)** —
 explicación interactiva del método / interactive walkthrough
@@ -28,9 +27,10 @@ números aleatorios es bueno y honesto. No puedes comprobar ninguna de las dos
 cosas. Con un dado sí: la aleatoriedad la produces tú, delante de ti, y cada paso
 del cálculo se puede verificar a mano.
 
-Este repositorio contiene el mismo algoritmo en **Python y JavaScript**, más
-una web didáctica que explica el método. No hay dependencias externas en ninguno
-de los dos: solo la biblioteca estándar del lenguaje.
+Este repositorio contiene el algoritmo en **Python**, más una web didáctica que
+explica el método. No hay dependencias externas: solo la biblioteca estándar de
+Python. El script está dividido en dos grupos: primero la generación de la
+entropía y luego la de las 12 palabras.
 
 ## Aviso de seguridad
 
@@ -52,9 +52,8 @@ python3 bip39_dados.py             # pedir las 50 tiradas
 python3 bip39_dados.py --detalle   # mostrar todos los pasos intermedios
 ```
 
-Equivalente: `node scripts/javascript/bip39_dados.js`. Cada carpeta de `scripts/`
-incluye además un `REQUISITOS.md` con lo necesario para ejecutarla y un
-`INSTRUCCIONES.md` con el paso a paso.
+La carpeta `scripts/python/` incluye además un `REQUISITOS.md` con lo necesario
+para ejecutarlo y un `INSTRUCCIONES.md` con el paso a paso.
 
 El modo `--detalle` imprime N, el recorte a 128 bits, el checksum y los 12 grupos
 de bits. Es para **aprender y enseñar**, no para generar una semilla real.
@@ -125,9 +124,8 @@ que la huella coincida y que la identidad sea exactamente
 | Lenguaje | Mínimo | Notas |
 |---|---|---|
 | Python | 3.2 | Preinstalado en macOS y Linux |
-| Node.js | 10.4 | Necesita `BigInt` |
 
-Ninguno necesita instalar paquetes.
+No necesita instalar paquetes.
 
 ## Diferencias con otras herramientas
 
@@ -143,7 +141,7 @@ necesita unas 77 tiradas donde aquí bastan 50.
 Para verificación cruzada, introduce la **entropía en hexadecimal** que imprime el
 script.
 
-Estos scripts incluyen un bloque comentado de rechazo que elimina el sesgo por
+El script incluye un bloque comentado de rechazo que elimina el sesgo por
 completo, a cambio de repetir las 50 tiradas el 15,8 % de las veces (~59 tiradas
 esperadas, aun así menos que 77).
 
@@ -152,19 +150,17 @@ esperadas, aun así menos que 77).
 | Fichero | Qué es |
 |---|---|
 | `scripts/python/bip39_dados.py` | Implementación en Python 3 |
-| `scripts/javascript/bip39_dados.js` | Implementación en Node.js |
-| `scripts/*/REQUISITOS.md` | Qué necesitas instalado para cada lenguaje |
-| `scripts/*/INSTRUCCIONES.md` | Cómo lanzar cada implementación |
-| `scripts/comparar_implementaciones.sh` | Comprueba que las dos dan las mismas palabras con las mismas tiradas |
+| `scripts/python/REQUISITOS.md` | Qué necesitas instalado |
+| `scripts/python/INSTRUCCIONES.md` | Cómo lanzar el script |
 | `index.html` | Web didáctica bilingüe, autocontenida |
 | `tutorial_bip39_dados.md` | Tutorial largo con el código explicado |
 | `FIRMAR.md` | Cómo se firma y se verifica este repositorio |
 | `ADN-clave-publica.asc` | Clave pública GPG |
 | `SHA256SUMS` · `.asc` · `.ots` | Hashes, firma y sello temporal |
 
-`index.html` lleva los dos scripts y el comparador incrustados, y calcula su SHA-256 en el
-navegador. **Puedes guardarlo y llevártelo al ordenador sin red**: funciona
-entero sin conexión, con explicación, código y descarga.
+`index.html` lleva el script incrustado y calcula su SHA-256 en el navegador.
+**Puedes guardarlo y llevártelo al ordenador sin red**: funciona entero sin
+conexión, con explicación, código y descarga.
 
 ## Contribuir
 
@@ -196,9 +192,10 @@ generator is both sound and honest. You can verify neither. With a die you can:
 you produce the randomness yourself, in front of you, and every step of the
 calculation can be checked by hand.
 
-This repository holds the same algorithm in **Python and JavaScript**, plus a
-teaching site that explains the method. Neither has external
-dependencies — standard library only.
+This repository holds the algorithm in **Python**, plus a teaching site that
+explains the method. No external dependencies — Python's standard library only.
+The script is split into two groups: first the entropy generation, then the 12
+words.
 
 ## Safety notice
 
@@ -220,9 +217,8 @@ python3 bip39_dados.py             # prompt for the 50 rolls
 python3 bip39_dados.py --detalle   # print every intermediate value
 ```
 
-Equivalent: `node scripts/javascript/bip39_dados.js`. Each folder under
-`scripts/` also ships a `REQUISITOS.md` with what you need installed to run it,
-and an `INSTRUCCIONES.md` with the step-by-step.
+The `scripts/python/` folder also ships a `REQUISITOS.md` with what you need
+installed to run it, and an `INSTRUCCIONES.md` with the step-by-step.
 
 `--detalle` prints N, the trim to 128 bits, the checksum and the 12 bit groups.
 It's for **learning and teaching**, not for generating a real seed.
@@ -293,9 +289,8 @@ fingerprint matches, and that the identity reads exactly
 | Language | Minimum | Notes |
 |---|---|---|
 | Python | 3.2 | Preinstalled on macOS and Linux |
-| Node.js | 10.4 | Needs `BigInt` |
 
-None of them requires installing packages.
+It requires no package installation.
 
 ## How this differs from other tools
 
@@ -310,26 +305,24 @@ where this needs 50.
 **Don't feed your 50 rolls into another tool expecting the same words.** For
 cross-checking, enter the **hex entropy** the script prints.
 
-These scripts ship a commented-out rejection block that removes the bias
-entirely, at the cost of re-rolling all 50 dice 15.8% of the time (~59 expected
-rolls, still fewer than 77).
+The script ships a commented-out rejection block that removes the bias entirely,
+at the cost of re-rolling all 50 dice 15.8% of the time (~59 expected rolls,
+still fewer than 77).
 
 ## Contents
 
 | File | What it is |
 |---|---|
 | `scripts/python/bip39_dados.py` | Python 3 implementation |
-| `scripts/javascript/bip39_dados.js` | Node.js implementation |
-| `scripts/*/REQUISITOS.md` | What you need installed for each language |
-| `scripts/*/INSTRUCCIONES.md` | How to run each implementation |
-| `scripts/comparar_implementaciones.sh` | Checks that both give the same words for the same rolls |
+| `scripts/python/REQUISITOS.md` | What you need installed |
+| `scripts/python/INSTRUCCIONES.md` | How to run the script |
 | `index.html` | Bilingual teaching site, self-contained |
 | `tutorial_bip39_dados.md` | Long-form tutorial (Spanish) |
 | `FIRMAR.md` | How this repository is signed and verified (Spanish) |
 | `ADN-clave-publica.asc` | GPG public key |
 | `SHA256SUMS` · `.asc` · `.ots` | Hashes, signature and timestamp |
 
-`index.html` embeds both scripts and the comparator, and computes their SHA-256 in the browser.
+`index.html` embeds the script and computes its SHA-256 in the browser.
 **You can save it and carry it to your offline computer**: it works entirely
 without a connection — explanation, code and downloads included.
 
